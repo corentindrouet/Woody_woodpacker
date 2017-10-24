@@ -115,9 +115,14 @@ static int			crypt_section(int fd, char *buf)
 int				crypt(int fd)
 {
 	char		*buf;
+	size_t		size;
+	int			ret;
 
-	buf = mmap(0, get_file_size(fd), PROT_READ, MAP_PRIVATE, fd, 0);
+	size = get_file_size(fd);
+	buf = mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	if (buf == MAP_FAILED)
 		return (-1);
-	return (crypt_section(fd, buf));
+	ret = crypt_section(fd, buf);
+	munmap(buf, size);
+	return (ret);
 }

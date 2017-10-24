@@ -1,6 +1,13 @@
 #include "woody_woodpacker.h"
 
-int					packer_infect(int fd, char *packer)
+/*
+**	Create a function here to update packer code with
+**		>> previous Elf64_Ehdr->e_entry for final packer jump
+**		>> .text section address
+**		>> .text section size
+*/
+
+unsigned int		packer_infect(int fd, char *packer)
 {
 	unsigned int	offset;
 
@@ -10,7 +17,7 @@ int					packer_infect(int fd, char *packer)
 	// Code cave offset
 	offset = cave_miner(fd, strlen(packer));
 	if (offset == 0)
-		return (-1);
+		return (0);
 
 	// Jump to code cave offset
 	lseek(fd, offset, SEEK_SET);
@@ -19,15 +26,10 @@ int					packer_infect(int fd, char *packer)
 	if (write(fd, packer, strlen(packer)) == -1)
 	{
 		lseek(fd, 0, SEEK_SET);
-		printf("Error: write failed\n");
-		return (-1);
-	}
-	else
-	{
-		printf("Success: packer wrote into file\n");
+		return (0);
 	}
 
 	// Reset fd cursor
 	lseek(fd, 0, SEEK_SET);
-	return (0);
+	return (offset);
 }
