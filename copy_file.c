@@ -12,21 +12,22 @@ int			copy_file(const char *src, const char *dst)
 	
 	if (fd_in < 0 || fd_out < 0)
 	{
-		printf("Error: invalid file descriptor(s)\n");
+		printf("Error: unable to copy file, invalid file descriptor(s)\n");
 		return (-1);
 	}
 
 	size = get_file_size(fd_in);
-	printf("File size is %lu bytes\n", size);
+	printf("Debug: total input file size is %lu bytes\n", size);
 
 	if ((buf = (int *)malloc(sizeof(int) * size)) == NULL)
 	{
-		printf("Error: malloc of %lu bytes failed\n", size);
+		printf("Error: unable to copy file, malloc %lu bytes failed\n", size);
 		return (-1);
 	}
 
 	if (read(fd_in, buf, size) == -1)
 	{
+		printf("Error: unable to read from %s\n", src);
 		close(fd_in);
 		close(fd_out);
 		free(buf);
@@ -35,12 +36,15 @@ int			copy_file(const char *src, const char *dst)
 
 	if (write(fd_out, buf, size) == -1)
 	{
+		printf("Error: unable to write into %s\n", dst);
 		close(fd_in);
 		close(fd_out);
 		free(buf);
 		return (-1);
 	}
 	
+	printf("Success: file %s copied byte-for-byte into %s\n", src, dst);
+
 	close(fd_in);
 	free(buf);
 

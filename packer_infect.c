@@ -9,66 +9,52 @@ static unsigned int		code_cave(int fd, size_t size)
 	size_t				off;
 	size_t				max;
 
-
 	len = get_file_size(fd);
 	start = 0;
 	end = 0;
 	off = 0;
 	max = 0;
 
-	printf("Finding code cave:\nFit size: %lu\nFile length: %lu\n", size, len);
+	// Debug
+	printf(">> Searching for code cave:\nRequired size: %lu\nTotal file length: %lu\n", size, len);
 
+	// Malloc file
 	if ((buf = (char *)malloc(sizeof(char) * len)) == NULL)
-	{
-		printf("error: code_cave: 1\n");
 		return (-1);
-	}
 	
+	// Fill-in buffer with file content
 	if (read(fd, buf, len) == -1)
-	{
-		printf("error: code_cave: 2\n");
 		return (-1);
-	}
-	
+
+	// Until we did not read EOF
 	while ((start != len))
 	{
-		end = start;
-
+		// If suitable length is found
 		if (end != 0 && max >= size)
-		{
-			printf("debug: code_cave: brake !\n");
 			break ;
-		}
 
+		// Compute file offsets
+		end = start;
 		if (buf[start] != 0)
-		{
-			write(1, "-", 1);
 			start++;
-		}
 		else
 		{
 			end = start;
-			
 			while (end != len && buf[end] == 0)
-			{
-				write(1, ".", 1);
 				end++;
-			}
-			
-			printf("Info: start is at %lu, end is at %lu, diff is %lu\n", start, end, end - start);
-
 			if ((end - start) > max)
 			{
 				off = start;
 				max = end - start;
 			}
-
 			start = end + 1;
-		
-			//printf("Gap found : offset=%lu, length=%lu\n", start, end - start);
 		}
 	}
 	
+	// If suitable length found
+	if (off && max)
+		printf("\n[*] Found code cave\nStart is at %lu\nAvailable size is %lu\n\n", off, max);
+
 	free(buf);
 	return (off);
 }
@@ -76,27 +62,31 @@ static unsigned int		code_cave(int fd, size_t size)
 int					packer_infect(int fd, char *packer)
 {
 	unsigned int	offset;
-	//unsigned int	start;
-	//unsigned int	pos;
 
+	// Reset fd cursor
 	lseek(fd, 0, SEEK_SET);
+	
+	// Code cave offset
 	offset = code_cave(fd, strlen(packer));
 	if (offset == 0)
 		return (-1);
 
-	/*start = offset;
-	pos = 0;
+	// Jump to code cave offset
+	lseek(fd, offset, SEEK_SET);
 
-	lseek(fd, start, SEEK_SET);
-
+	// Write packer
 	if (write(fd, packer, strlen(packer)) == -1)
 	{
 		lseek(fd, 0, SEEK_SET);
 		printf("Error: write failed\n");
-		free(buffer);
 		return (-1);
 	}
+	else
+	{
+		printf("Success: packer wrote into file\n");
+	}
 
-	lseek(fd, 0, SEEK_SET);*/
+	// Reset fd cursor
+	lseek(fd, 0, SEEK_SET);
 	return (0);
 }
