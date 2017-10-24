@@ -18,7 +18,8 @@ SRC			=	main\
 				crypt\
 				get_file_size\
 				copy_file\
-				packer_infect
+				packer_infect\
+				cave_miner
 OBJ			=	$(addsuffix .o, $(SRC))
 
 all: $(EXEC)

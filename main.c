@@ -36,12 +36,12 @@ int				main(int argc, char **argv)
 		return (1);
 	}
 
-	if (crypt(fd) == -1)
+	/*if (crypt(fd) == -1)
 	{
 		printf("Error: file encryption failed\n");
 		close(fd);
 		return (1);
-	}
+	}*/
 
 	close(fd);
 	return (0);
