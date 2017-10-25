@@ -1,12 +1,4 @@
-<<<<<<< 72c107ac50b77d2210cdb20537755de662cbe90f
 #include "woody_woodpacker.h"
-=======
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdlib.h>
->>>>>>> ok for encryptage en decryptage function
 
 void swap(int *a, int *b)
 {
