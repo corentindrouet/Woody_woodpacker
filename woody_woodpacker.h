@@ -10,6 +10,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include "libft.h"
 
 #define E_USAGE		1
 #define E_FDOPEN	2

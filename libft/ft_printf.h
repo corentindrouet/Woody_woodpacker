@@ -16,6 +16,7 @@
 # include <string.h>
 # include <stdlib.h>
 # include <unistd.h>
+# include <stdint.h>
 
 int		init_diese_i(char **ptr);
 char	*all_flag_spe(long long i,

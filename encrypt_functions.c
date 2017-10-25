@@ -18,7 +18,7 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 	int		tab[256];
 	int		i;
 	int		j;
-	int		k;
+	unsigned int	k;
 
 	if (!zone || !size || !(key = get_random_key(256)))
 		return (0);
@@ -66,7 +66,7 @@ void	decrypt_zone(char *zone, size_t zone_size, unsigned char *key, size_t key_s
 	int		tab[256];
 	int		i;
 	int		j;
-	int		k;
+	unsigned int	k;
 
 	i = -1;
 	while (++i < 4)

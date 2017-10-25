@@ -14,20 +14,36 @@ SRC			=	main \
 				file_unmap
 
 OBJ			=	$(addsuffix .o, $(SRC))
+LIB = ./libft/libftprintf.a
+LIBPATH = ./libft/
+LIBID = ftprintf
+
+$(EXEC): $(LIB) $(OBJ)
+	$(info Compiling $(EXEC))
+	@$(CC) -I$(LIBPATH) $(CFLAGS) -o $@ $^ -L$(LIBPATH) -l$(LIBID)
 
 all: $(EXEC)
 
-$(EXEC): $(OBJ)
-	$(CC) $(CFLAGS) -o $@ $^
+$(LIB): 
+	$(info Compiling libft)
+	@make -C $(LIBPATH)
+	@echo "Done !"
 
 %.o: %.c
-	$(CC) $(CFLAGS) -o $@ -c $<
+	$(info Compiling $< into $@ ...)
+	@$(CC) $(CFLAGS) -o $@ -c $< -I$(LIBPATH)
 
 clean:
-	rm -f $(OBJ)
+	$(info Cleaning . and ./libft ...)
+	@make $@ -C $(LIBPATH)
+	@rm -f $(OBJ)
+	$(info Done !)
 
 fclean: clean
-	rm -rf $(EXEC)
+	$(info Cleaning . and ./libft ...)
+	@make $@ -C $(LIBPATH)
+	@rm -rf $(EXEC)
+	$(info Done !)
 
 re: fclean all
 
