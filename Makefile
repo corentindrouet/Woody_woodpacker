@@ -14,12 +14,14 @@ EXEC		=	woody_woodpacker
 CC			=	gcc
 CFLAGS		=	-Wall -Wextra -Werror
 SRC			=	main\
+				infos\
+				open_fds\
+				error_handler\
 				check_elf\
-				crypt\
-				get_file_size\
+				file_size\
 				copy_file\
-				packer_infect\
-				cave_miner
+				mine_cave\
+				packer_infect
 OBJ			=	$(addsuffix .o, $(SRC))
 
 all: $(EXEC)
