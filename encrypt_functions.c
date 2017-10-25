@@ -1,8 +1,4 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <string.h>
-#include <fcntl.h>
-#include <stdlib.h>
+#include "woody_woodpacker.h"
 
 void swap(int *a, int *b)
 {
@@ -59,7 +55,7 @@ void	*get_random_key(size_t size)
 		return (NULL);
 	if (!(buffer = malloc(size + 1)))
 		return (NULL);
-	bzero(buffer, size + 1);
+	ft_bzero(buffer, size + 1);
 	read(fd, buffer, size);
 	close(fd);
 	return (buffer);
