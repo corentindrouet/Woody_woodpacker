@@ -21,7 +21,9 @@ SRC			=	main\
 				file_size\
 				copy_file\
 				mine_cave\
-				packer_infect
+				packer_infect\
+				encrypt\
+				encryption
 OBJ			=	$(addsuffix .o, $(SRC))
 
 all: $(EXEC)

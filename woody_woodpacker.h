@@ -19,7 +19,7 @@
 #define E_MCAVE		6
 #define E_INFECT	7
 
-#define EXEC_NAME	woody
+#define TARGET_FILE	"woody"
 
 /*
 ** This structures holds all the basics infos
@@ -34,7 +34,7 @@ typedef struct		s_infos
 	uint64_t		new_entry;
 	uint64_t		image_base;
 	ssize_t			cave_offset;
-	char			*key_stream;
+	unsigned char	*key_stream;
 	char			*packer_code;
 }					t_infos;
 
@@ -78,5 +78,17 @@ int					mine_cave(t_infos *infos);
 ** Write packer code into target file
 */
 int					packer_infect(t_infos *infos);
+
+/*
+** Encryption
+*/
+
+int					encrypt(t_infos *infos, char *key);
+
+
+unsigned char		*encrypt_zone(char *zone, size_t size);
+void				decrypt_zone(char *zone, size_t zone_size, unsigned char *key, size_t key_size);
+void				*get_random_key(size_t size);
+void				swap(int *a, int *b);
 
 #endif

@@ -5,11 +5,11 @@ int		main(int argc, char **argv)
 	t_infos			*infos;
 
 	/* Test arguments */
-	if (argc != 3)
+	if (argc < 2)
 		return (error_handler(E_USAGE));
 
 	/* Init infos structure */
-	infos = infos_init(argv[1], argv[2]);
+	infos = infos_init(argv[1], TARGET_FILE);
 	if (infos == NULL)
 		return (-1);
 
@@ -36,6 +36,13 @@ int		main(int argc, char **argv)
 
 	/* Infect packer */
 	if (packer_infect(infos) == -1)
+	{
+		infos_destroy(infos);
+		return (-1);
+	}
+
+	/* Encrypt/Decrypt .text section */
+	if (encrypt(infos, argv[2]) == -1)
 	{
 		infos_destroy(infos);
 		return (-1);
