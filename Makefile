@@ -36,7 +36,7 @@ $(LIB):
 clean:
 	$(info Cleaning . and ./libft ...)
 	@make $@ -C $(LIBPATH)
-	@rm -f $(OBJ)
+	rm -f $(OBJ)
 	$(info Done !)
 
 fclean: clean

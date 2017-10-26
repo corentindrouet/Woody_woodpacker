@@ -66,7 +66,7 @@ void	*get_random_key(size_t size)
 	while (numberRandomBytesReaded < 256)
 	{	
 		read(fd, (buffer + numberRandomBytesReaded), size - numberRandomBytesReaded);
-		numberRandomBytesReaded = strlen(buffer);
+		numberRandomBytesReaded = ft_strlen(buffer);
 	}
 	close(fd);
 	return (buffer);
