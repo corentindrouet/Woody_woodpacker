@@ -22,7 +22,7 @@ t_infos		*infos_init(const char *src, const char *dst)
 	infos = (t_infos *)malloc(sizeof(t_infos));
 	if (infos == NULL)
 		return (NULL);
-	
+
 	infos->src_fd = -1;
 	infos->dst_fd = -1;
 	infos->file_size = 0;
@@ -31,6 +31,7 @@ t_infos		*infos_init(const char *src, const char *dst)
 	infos->image_base = 0x0;
 	infos->cave_offset = 0x0;
 	infos->key_stream = NULL;
+	infos->key_length = 0x0;
 	infos->packer_code = NULL;
 
 	if (open_fds(infos, src, dst) == -1)

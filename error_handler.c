@@ -3,7 +3,7 @@
 int		error_handler(int code)
 {
 	if (code == E_USAGE)
-		printf("Usage: ./woody_woodpacker source [key]\n");
+		printf("Usage: ./woody_woodpacker <source> <destination> [keyfile]\n");
 	else if (code == E_FDOPEN)
 		printf("Error: unable to open source and/or destination file(s)\n");
 	else if (code == E_ELFHDR)

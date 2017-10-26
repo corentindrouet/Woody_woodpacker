@@ -23,10 +23,12 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 	if (!zone || !size || !(key = get_random_key(256)))
 		return (0);
 	i = -1;
+	printf("> First encryption step, key:%s\n", key);
 	while (++i < 256)
 		tab[i] = i;
 	i = -1;
 	j = 0;
+	printf("> Second encryption step\n");
 	while (++i < 256)
 	{
 		j = (j + tab[i] + key[i % 256]) % 256;
@@ -35,6 +37,7 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 	i = 0;
 	j = 0;
 	k = 0;
+	printf("> Third encryption step\n");
 	while (k < size)
 	{
 		i = (i + 1) % 256;
@@ -44,6 +47,7 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 		zone[k] = zone[k] ^ tab[j];
 		k++;
 	}
+	printf("> Done\n");
 	return (key);
 }
 
@@ -51,13 +55,19 @@ void	*get_random_key(size_t size)
 {
 	void	*buffer;
 	int		fd;
+	int	numberRandomBytesReaded;
 
-	if ((fd = open("/dev/random", O_RDONLY)) == -1)
+	numberRandomBytesReaded = 0;
+	if ((fd = open("/dev/urandom", O_RDONLY)) == -1)
 		return (NULL);
 	if (!(buffer = malloc(size + 1)))
 		return (NULL);
 	bzero(buffer, size + 1);
-	read(fd, buffer, size);
+	while (numberRandomBytesReaded < 256)
+	{
+		read(fd, (buffer + numberRandomBytesReaded), size - numberRandomBytesReaded);
+		numberRandomBytesReaded = strlen(buffer);
+	}
 	close(fd);
 	return (buffer);
 }

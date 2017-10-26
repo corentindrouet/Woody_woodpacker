@@ -23,6 +23,7 @@ SRC			=	main\
 				mine_cave\
 				packer_infect\
 				encrypt\
+				decrypt\
 				encryption
 OBJ			=	$(addsuffix .o, $(SRC))
 

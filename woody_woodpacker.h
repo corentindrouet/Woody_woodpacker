@@ -35,6 +35,7 @@ typedef struct		s_infos
 	uint64_t		image_base;
 	ssize_t			cave_offset;
 	unsigned char	*key_stream;
+	size_t			key_length;
 	char			*packer_code;
 }					t_infos;
 
@@ -80,10 +81,11 @@ int					mine_cave(t_infos *infos);
 int					packer_infect(t_infos *infos);
 
 /*
-** Encryption
+** Encryption / Decription
 */
 
-int					encrypt(t_infos *infos, char *key);
+int					encrypt(t_infos *infos);
+int					decrypt(t_infos *infos, const char *keyfile);
 
 
 unsigned char		*encrypt_zone(char *zone, size_t size);

@@ -1,38 +1,41 @@
 #include "woody_woodpacker.h"
 
-static size_t		keyfile_length(unsigned char *key)
+static int			keyfile_read(t_infos *infos, const char *keyfile)
 {
-	size_t			len;
-
-	len = 0;
-	while (key && *key != 0)
-	{
-		len++;
-		key++;
-	}
-	return (len);
-}
-
-static int			keyfile_write(unsigned char *key)
-{
-	ssize_t			ret;
 	int				fd;
+	ssize_t			ret;
+	unsigned char	*buf;
 
-	printf(">> Debug: saving key into 'keyfile'\n");
+	printf(">> Debug: reading from 'keyfile'\n");
 
-	if ((fd = open("keyfile", O_RDWR | O_CREAT | O_TRUNC)) == -1)
+	if (!keyfile)
 	{
-		printf("Error: unable to open 'keyfile' for writing\n");
+		printf("Error: no 'keyfile' target specified\n");
 		return (-1);
 	}
-	ret = write(fd, key, keyfile_length(key));
-	printf(">> Debug: %ld / %lu bytes written into 'keyfile'\n", ret, keyfile_length(key));
-	if ((size_t)ret != keyfile_length(key))
+	if ((fd = open(keyfile, O_RDONLY)) == -1)
 	{
+		printf("Error: unable to open 'keyfile'\n");
+		return (-1);
+	}
+	if (!(buf = (unsigned char *)malloc(sizeof(unsigned char) * 256)))
+	{
+		printf("Error: unable to malloc buffer for 'keyfile'\n");
 		close(fd);
 		return (-1);
 	}
+	memset(buf, 0, 256);
+	if ((ret = read(fd, buf, 256)) <= 0)
+	{
+		printf("Error: unable to read from 'keyfile'\n");
+		close(fd);
+		free(buf);
+		return (-1);
+	}
+	printf(">> Debug: %ld bytes read from 'keyfile'\n", ret);
 	close(fd);
+	infos->key_stream = buf;
+	infos->key_length = (size_t)ret;
 	return (0);
 }
 
@@ -47,14 +50,14 @@ static void			keyfile_dump(unsigned char *key)
 	printf("\n");
 }
 
-static int			encrypt_process(t_infos *infos, size_t off, size_t size)
+static int			decrypt_process(t_infos *infos, size_t off, size_t size)
 {
 	int				fd;
 	char			*buf;
 
 	fd = infos->dst_fd;
 
-	printf(">> Debug: processing encryption ...\n");
+	printf(">> Debug: processing decryption ...\n");
 
 	/* Place cursor at the begening of the section */
 	lseek(fd, off, SEEK_SET);
@@ -77,16 +80,8 @@ static int			encrypt_process(t_infos *infos, size_t off, size_t size)
 		return (-1);
 	}
 
-	/* Encrypt file */
-	if (infos->key_stream == NULL)
-	{
-		// Save key
-		infos->key_stream = encrypt_zone(buf, size);
-		// Print on screen
-		keyfile_dump(infos->key_stream);
-		// Save key into file
-		keyfile_write(infos->key_stream);
-	}
+	keyfile_dump(infos->key_stream);
+	decrypt_zone(buf, size, infos->key_stream, infos->key_length);
 
 	/* Re-place cursor at the begening of the section (read moved it 'size' bytes) */
 	lseek(fd, off, SEEK_SET);
@@ -107,7 +102,7 @@ static int			encrypt_process(t_infos *infos, size_t off, size_t size)
 	return (0);
 }
 
-static int			encrypt_section(t_infos *infos, char *buf)
+static int			decrypt_section(t_infos *infos, char *buf)
 {
 	Elf64_Ehdr		*e;
 	Elf64_Shdr		*s;
@@ -125,16 +120,22 @@ static int			encrypt_section(t_infos *infos, char *buf)
 	{
 		st = s[i];
 		if (!strcmp(stab + st.sh_name, ".text"))
-			return (encrypt_process(infos, st.sh_offset, st.sh_size));
+			return (decrypt_process(infos, st.sh_offset, st.sh_size));
 		i++;
 	}
 	printf("Error: no section .text found on encryption\n");
 	return (-1);
 }
 
-int		encrypt(t_infos *infos)
+int		decrypt(t_infos *infos, const char *keyfile)
 {
 	char			*buf;
+
+	if (keyfile_read(infos, keyfile) == -1)
+	{
+		printf("Error: retreiving 'keyfile' content failed\n");
+		return (-1);
+	}
 
 	buf = mmap(0, infos->file_size, PROT_READ, MAP_PRIVATE, infos->dst_fd, 0);
 	if (buf == MAP_FAILED)
@@ -142,5 +143,5 @@ int		encrypt(t_infos *infos)
 		printf("Error: mmap failed on encryption\n");
 		return (-1);
 	}
-	return (encrypt_section(infos, buf));
+	return (decrypt_section(infos, buf));
 }

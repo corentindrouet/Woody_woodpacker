@@ -5,11 +5,11 @@ int		main(int argc, char **argv)
 	t_infos			*infos;
 
 	/* Test arguments */
-	if (argc < 2)
+	if (argc < 3)
 		return (error_handler(E_USAGE));
 
 	/* Init infos structure */
-	infos = infos_init(argv[1], TARGET_FILE);
+	infos = infos_init(argv[1], argv[2]);
 	if (infos == NULL)
 		return (-1);
 
@@ -27,25 +27,37 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
-	/* Find a code cave */
-	if (mine_cave(infos) <= 0)
+	if (argc == 3)
 	{
-		infos_destroy(infos);
-		return (-1);
-	}
+		/* Find a code cave */
+		if (mine_cave(infos) <= 0)
+		{
+			infos_destroy(infos);
+			return (-1);
+		}
 
-	/* Infect packer */
-	if (packer_infect(infos) == -1)
-	{
-		infos_destroy(infos);
-		return (-1);
-	}
+		/* Infect packer */
+		if (packer_infect(infos) == -1)
+		{
+			infos_destroy(infos);
+			return (-1);
+		}
 
-	/* Encrypt/Decrypt .text section */
-	if (encrypt(infos, argv[2]) == -1)
+		/* Encrypt .text section */
+		if (encrypt(infos) == -1)
+		{
+			infos_destroy(infos);
+			return (-1);
+		}
+	}
+	else if (argc == 4)
 	{
-		infos_destroy(infos);
-		return (-1);
+		/* Decrypt .text section */
+		if (decrypt(infos, argv[3]) == -1)
+		{
+			infos_destroy(infos);
+			return (-1);
+		}
 	}
 
 	infos_destroy(infos);
