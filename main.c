@@ -49,6 +49,10 @@ int		main(int argc, char **argv)
 			infos_destroy(infos);
 			return (-1);
 		}
+
+		/*
+		** When encryption is done we need to change a few things
+		*/
 	}
 	else if (argc == 4)
 	{

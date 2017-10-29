@@ -19,7 +19,7 @@ int		mine_cave(t_infos *infos)
 		return (error_handler(E_MCAVE));
 	else
 		printf(">> Debug: buffer malloc-ed for %ld bytes\n", infos->file_size);
-	
+
 	if (read(infos->dst_fd, buf, infos->file_size) != infos->file_size)
 		return (error_handler(E_MCAVE));
 	else
@@ -45,20 +45,20 @@ int		mine_cave(t_infos *infos)
 			{
 				end++;
 			}
-			
+
 			if ((end - start) > max)
 			{
 				off = start;
 				max = end - start;
 			}
-			
+
 			start = end + 1;
 		}
 	}
-	
+
 	lseek(infos->dst_fd, 0, SEEK_SET);
 	free(buf);
-	
+
 	if (off <= 0)
 		return (error_handler(E_MCAVE));
 	return (off);

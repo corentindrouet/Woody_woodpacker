@@ -30,10 +30,12 @@ typedef struct		s_infos
 	int				src_fd;
 	int				dst_fd;
 	ssize_t			file_size;
-	uint64_t		old_entry;
-	uint64_t		new_entry;
-	uint64_t		image_base;
+	size_t			old_entry;
+	size_t			new_entry;
+	size_t			image_base;
 	ssize_t			cave_offset;
+	size_t			textsect_offset;
+	size_t			textsect_size;
 	unsigned char	*key_stream;
 	size_t			key_length;
 	char			*packer_code;

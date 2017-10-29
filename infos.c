@@ -30,6 +30,8 @@ t_infos		*infos_init(const char *src, const char *dst)
 	infos->new_entry = 0x0;
 	infos->image_base = 0x0;
 	infos->cave_offset = 0x0;
+	infos->textsect_offset = 0x0;
+	infos->textsect_size = 0x0;
 	infos->key_stream = NULL;
 	infos->key_length = 0x0;
 	infos->packer_code = NULL;
