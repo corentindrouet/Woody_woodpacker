@@ -8,6 +8,7 @@ _start:
 	mov		rdx, msg_end - msg
 	syscall
 
+	xor		rdx, rdx
 	mov		rax, 0x22222222
 	jmp		rax
 

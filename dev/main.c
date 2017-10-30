@@ -25,6 +25,27 @@ typedef struct	s_datas
 	size_t		c_size;		/* Cave size */
 }				t_datas;
 
+int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
+{
+	unsigned char	*p;
+	uint64_t		n;
+	int				i;
+
+	p = (unsigned char *)m;
+	i = 0;
+	while (i < len)
+	{
+		n = *((uint32_t *)(p + i));
+		if (n == pat)
+		{
+			*((uint32_t *)(p + i)) = val;
+			return (0);
+		}
+		i++;
+	}
+	return (-1);
+}
+
 int		elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset, size_t *c_size)
 {
 	char		*buf;
@@ -156,27 +177,6 @@ int		file_map(const char *name, void **f_map, size_t *f_size)
 	return (0);
 }
 
-int		elfi_mem_subst(void *m, size_t len, uint32_t pat, uint32_t val)
-{
-	unsigned char	*p;
-	uint64_t		n;
-	int				i;
-
-	p = (unsigned char *)m;
-	i = 0;
-	while (i < len)
-	{
-		n = *((uint32_t *)(p + i));
-		if (n == pat)
-		{
-			*((uint32_t *)(p + i)) = val;
-			return (0);
-		}
-		i++;
-	}
-	return (-1);
-}
-
 int		main(int argc, char **argv)
 {
 	t_datas		datas;
@@ -252,7 +252,7 @@ int		main(int argc, char **argv)
 	memmove(datas.f_map + datas.c_offset, datas.p_map + datas.ps_offset, datas.ps_size);
 
 	// Update return address
-	elfi_mem_subst(datas.f_map + datas.c_offset, datas.ps_size, 0x22222222, (uint32_t)datas.o_entry);
+	elf64_update_asm(datas.f_map + datas.c_offset, datas.ps_size, 0x22222222, (uint32_t)datas.o_entry);
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
