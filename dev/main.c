@@ -11,13 +11,16 @@ int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
 	while (i < len)
 	{
 		n = *((uint32_t *)(p + i));
+		printf("n = %u\n", n);
 		if (n == pat)
 		{
 			*((uint32_t *)(p + i)) = val;
+			printf("+match+\n");
 			return (0);
 		}
 		i++;
 	}
+	printf("-no match-\n");
 	return (-1);
 }
 
@@ -36,7 +39,7 @@ int		elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset
 	max = 0;
 	while ((start != f_size))
 	{
-		if (end != 0 && max >= ps_size)
+		if (end != 0 && max >= ps_size + 256)
 		{
 			*c_offset = off;
 			*c_size = (size_t)max;
@@ -102,7 +105,6 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr)
 		if (phdr->p_type == PT_LOAD && phdr->p_flags & 0x011)
 		{
 			*v_addr = phdr->p_vaddr;
-			printf("Phdr: p_filesz=%lu p_memsz=%lu\n", phdr->p_filesz, phdr->p_memsz);
 			return (0);
 		}
 		i++;
@@ -219,6 +221,7 @@ int		main(int argc, char **argv)
 	datas.ps_size = 0x0;
 	datas.c_offset = 0x0;
 	datas.c_size = 0x0;
+	datas.key = NULL;
 
 	if (argc != 2)
 	{
@@ -294,17 +297,23 @@ int		main(int argc, char **argv)
 	if (elf64_find_cave(datas.f_map, datas.f_size, datas.ps_size, &(datas.c_offset), &(datas.c_size)) != -1)
 		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.c_offset, datas.c_size);
 
-	datas.n_entry = datas.v_addr + datas.c_offset;
+	// We move at cave offset + 256 because the first 256 bytes are used to hold the encryption key
+	datas.n_entry = datas.v_addr + datas.c_offset + 256;
 
 	printf("Old entry point address : 0x%lu\n", datas.o_entry);
-	printf("Old entry point address (diff) : 0x%lu\n", datas.v_addr + datas.fs_offset);
 	printf("New entry point address : 0x%lu\n", datas.n_entry);
 
-	// Inject new content
-	memmove(datas.f_map + datas.c_offset, datas.p_map + datas.ps_offset, datas.ps_size);
+	// Encrypt .text zone
+	datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
+
+	// Inject encryption key
+	memmove(datas.f_map + datas.c_offset, datas.key, 256);
+
+	// Inject depacker
+	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
 
 	// Update return address
-	elf64_update_asm(datas.f_map + datas.c_offset, datas.ps_size, 0x22222222, (uint32_t)datas.o_entry);
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x22222222, (uint32_t)datas.o_entry);
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;

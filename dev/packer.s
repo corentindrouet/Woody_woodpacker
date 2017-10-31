@@ -8,9 +8,13 @@ _start:
 	mov		rdx, msg_end - msg
 	syscall
 
-	xor		rdx, rdx
-	mov		rax, 0x22222222
-	jmp		rax
+	mov		rax, 60
+	mov		rdi, 0
+	syscall
+
+;	xor		rdx, rdx
+;	mov		rax, 0x22222222
+;	jmp		rax
 
 align 8
 	msg		db 'This file has been infected',0x0a,0

@@ -41,6 +41,14 @@ typedef struct		s_datas
 	size_t			ps_size;		/* Packer section size */
 	off_t			c_offset;		/* Cave file offset */
 	size_t			c_size;			/* Cave size */
+	unsigned char	*key;			/* Encryption key */
 }					t_datas;
+
+/*
+** Encryption
+*/
+void				swap(int *a, int *b);
+unsigned char		*encrypt_zone(char *zone, size_t size);
+void				*get_random_key(size_t size);
 
 #endif
