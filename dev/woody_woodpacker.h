@@ -47,6 +47,7 @@ typedef struct		s_datas
 /*
 ** Encryption
 */
+
 void				swap(int *a, int *b);
 unsigned char		*encrypt_zone(char *zone, size_t size);
 void				*get_random_key(size_t size);

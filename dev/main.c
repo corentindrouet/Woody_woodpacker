@@ -1,6 +1,20 @@
 #include "woody_woodpacker.h"
 
-int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
+void	ft_xor(void *p, size_t l)
+{
+	char	*s;
+	int		i;
+
+	s = (char *)p;
+	i = 0;
+	while (i < l)
+	{
+		s[i] = s[i] ^ 120;
+		i++;
+	}
+}
+
+int		elf64_update_asm(void *m, size_t len, uint64_t pat, uint64_t val)
 {
 	unsigned char	*p;
 	uint64_t		n;
@@ -10,10 +24,11 @@ int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
 	i = 0;
 	while (i < len)
 	{
-		n = *((uint32_t *)(p + i));
+		n = *((uint64_t *)(p + i));
 		if (n == pat)
 		{
-			*((uint32_t *)(p + i)) = val;
+			printf("++ replace address found !\n");
+			*((uint64_t *)(p + i)) = val;
 			return (0);
 		}
 		i++;
@@ -112,10 +127,10 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr)
 int		elf64_is_valid(Elf64_Ehdr *ehdr)
 {
 	if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || \
-	ehdr->e_ident[EI_MAG1] != ELFMAG1 || \
-	ehdr->e_ident[EI_MAG2] != ELFMAG2 || \
-	ehdr->e_ident[EI_MAG3] != ELFMAG3 || \
-	(ehdr->e_type != ET_DYN && ehdr->e_type != ET_EXEC))
+			ehdr->e_ident[EI_MAG1] != ELFMAG1 || \
+			ehdr->e_ident[EI_MAG2] != ELFMAG2 || \
+			ehdr->e_ident[EI_MAG3] != ELFMAG3 || \
+			(ehdr->e_type != ET_DYN && ehdr->e_type != ET_EXEC))
 	{
 		return (-1);
 	}
@@ -290,9 +305,9 @@ int		main(int argc, char **argv)
 	if (elf64_find_sect(datas.f_map, &(datas.fs_offset), &(datas.fs_size), ".text") != -1)
 	{
 		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.fs_offset, datas.fs_size);
-		*((int *)(datas.f_map + 0x09)) = datas.fs_offset;
-		*((short *)(datas.f_map + 0x0d)) = datas.fs_size;
-		printf("Datas stored respectively at : 0x%lx and 0x%lx\n", datas.f_map + 0x09, datas.f_map + 0x0d);
+		//*((int *)(datas.f_map + 0x09)) = datas.fs_offset;
+		//*((short *)(datas.f_map + 0x0d)) = datas.fs_size;
+		//printf("Datas stored respectively at : 0x%lx and 0x%lx\n", datas.f_map + 0x09, datas.f_map + 0x0d);
 	}
 
 	if (elf64_find_sect(datas.p_map, &(datas.ps_offset), &(datas.ps_size), ".text") != -1)
@@ -308,20 +323,21 @@ int		main(int argc, char **argv)
 	// We move at cave offset + 256 because the first 256 bytes are used to hold the encryption key
 	datas.n_entry = datas.v_addr + datas.c_offset + 256;
 
-	printf("Old entry point address : 0x%lu\n", datas.o_entry);
-	printf("New entry point address : 0x%lu\n", datas.n_entry);
+	printf("Old entry point address : 0x%lx\n", datas.o_entry);
+	printf("New entry point address : 0x%lx\n", datas.n_entry);
 
 	// Encrypt .text zone
-	datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
+	//datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
+	//ft_xor(datas.f_map + datas.fs_offset, datas.fs_size);
 
 	// Inject encryption key
-	memmove(datas.f_map + datas.c_offset, datas.key, 256);
+	//memmove(datas.f_map + datas.c_offset, datas.key, 256);
 
 	// Inject depacker
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
 
 	// Update return address
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x22222222, (uint32_t)datas.o_entry);
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, (uint64_t)datas.o_entry);
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
