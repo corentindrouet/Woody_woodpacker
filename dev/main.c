@@ -11,16 +11,13 @@ int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
 	while (i < len)
 	{
 		n = *((uint32_t *)(p + i));
-		printf("n = %u\n", n);
 		if (n == pat)
 		{
 			*((uint32_t *)(p + i)) = val;
-			printf("+match+\n");
 			return (0);
 		}
 		i++;
 	}
-	printf("-no match-\n");
 	return (-1);
 }
 
@@ -286,16 +283,27 @@ int		main(int argc, char **argv)
 	datas.o_entry = ((Elf64_Ehdr *)(datas.f_map))->e_entry;
 
 	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr)) == 0)
+	{
 		printf("Virtual memory address : 0x%lx\n", datas.v_addr);
+	}
 
 	if (elf64_find_sect(datas.f_map, &(datas.fs_offset), &(datas.fs_size), ".text") != -1)
+	{
 		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.fs_offset, datas.fs_size);
+		*((int *)(datas.f_map + 0x09)) = datas.fs_offset;
+		*((short *)(datas.f_map + 0x0d)) = datas.fs_size;
+		printf("Datas stored respectively at : 0x%lx and 0x%lx\n", datas.f_map + 0x09, datas.f_map + 0x0d);
+	}
 
 	if (elf64_find_sect(datas.p_map, &(datas.ps_offset), &(datas.ps_size), ".text") != -1)
+	{
 		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", PACKER_FILE, datas.ps_offset, datas.ps_size);
+	}
 
 	if (elf64_find_cave(datas.f_map, datas.f_size, datas.ps_size, &(datas.c_offset), &(datas.c_size)) != -1)
+	{
 		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.c_offset, datas.c_size);
+	}
 
 	// We move at cave offset + 256 because the first 256 bytes are used to hold the encryption key
 	datas.n_entry = datas.v_addr + datas.c_offset + 256;
