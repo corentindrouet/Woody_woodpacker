@@ -1,29 +1,4 @@
-#include <stdio.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <elf.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <string.h>
-#include <stdlib.h>
-
-typedef struct	s_datas
-{
-	void		*f_map;		/* Binary mmap pointer */
-	size_t		f_size;		/* Binary file size */
-	void		*p_map;		/* Packer mmap pointer */
-	size_t		p_size;		/* Packer file size */
-	uint64_t	o_entry;	/* Old entry point */
-	uint64_t	n_entry;	/* New entry point */
-	uint64_t	v_addr;		/* Virtual base address */
-	off_t		fs_offset;	/* Binary section offset */
-	size_t		fs_size;	/* Binary section size */
-	off_t		ps_offset;	/* Packer section offset */
-	size_t		ps_size;	/* Packer section size */
-	off_t		c_offset;	/* Cave file offset */
-	size_t		c_size;		/* Cave size */
-}				t_datas;
+#include "woody_woodpacker.h"
 
 int		elf64_update_asm(void *m, size_t len, uint32_t pat, uint32_t val)
 {
@@ -137,11 +112,29 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr)
 
 int		elf64_is_valid(Elf64_Ehdr *ehdr)
 {
-	if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || ehdr->e_ident[EI_MAG1] != ELFMAG1 || ehdr->e_ident[EI_MAG2] != ELFMAG2 || ehdr->e_ident[EI_MAG3] != ELFMAG3 || ehdr->e_type != ET_EXEC)
+	if (ehdr->e_ident[EI_MAG0] != ELFMAG0 || \
+	ehdr->e_ident[EI_MAG1] != ELFMAG1 || \
+	ehdr->e_ident[EI_MAG2] != ELFMAG2 || \
+	ehdr->e_ident[EI_MAG3] != ELFMAG3 || \
+	(ehdr->e_type != ET_DYN && ehdr->e_type != ET_EXEC))
 	{
 		return (-1);
 	}
 	return (0);
+}
+
+size_t	file_size(int fd)
+{
+	off_t	off;
+
+	if (fd < 0)
+		return (0);
+	lseek(fd, 0, SEEK_SET);
+	off = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
+	if (off == -1)
+		return (0);
+	return ((size_t)off);
 }
 
 int		file_unmap(void *f_map, size_t f_size)
@@ -154,26 +147,58 @@ int		file_unmap(void *f_map, size_t f_size)
 int		file_map(const char *name, void **f_map, size_t *f_size)
 {
 	int			fd;
-	struct stat	st;
 
 	if (!name)
 		return (-1);
 	fd = open(name, O_RDWR);
 	if (fd < 0)
 		return (-1);
-	if (fstat(fd, &st) == -1)
-	{
-		close(fd);
-		return (-1);
-	}
-	*f_size = st.st_size;
-	*f_map = mmap(0, st.st_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	*f_size = file_size(fd);
+	*f_map = mmap(0, *f_size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
 	if (*f_map == MAP_FAILED)
 	{
 		close(fd);
 		return (-1);
 	}
 	close(fd);
+	return (0);
+}
+
+int		file_copy_free(int fd_src, int fd_dst, char **buf)
+{
+	if (*buf != NULL)
+	{
+		free(*buf);
+		*buf = NULL;
+	}
+	close(fd_src);
+	close(fd_dst);
+	return (-1);
+}
+
+int		file_copy(const char *src, const char *dst)
+{
+	int		fd_src;
+	int		fd_dst;
+	size_t	size;
+	ssize_t	ret;
+	char	*buf;
+
+	buf = NULL;
+	fd_src = open(src, O_RDONLY);
+	fd_dst = open(dst, O_RDWR | O_TRUNC | O_CREAT);
+	if (fd_src < 0 || fd_dst < 0)
+		return (file_copy_free(fd_src, fd_dst, &buf));
+	size = file_size(fd_src);
+	if (!(buf = (char *)malloc(sizeof(char) * size)))
+		return (file_copy_free(fd_src, fd_dst, &buf));
+	ret = read(fd_src, buf, size);
+	if (ret < 0 || (size_t)ret != size)
+		return (file_copy_free(fd_src, fd_dst, &buf));
+	ret = write(fd_dst, buf, size);
+	if (ret < 0 || (size_t)ret != size)
+		return (file_copy_free(fd_src, fd_dst, &buf));
+	file_copy_free(fd_src, fd_dst, &buf);
 	return (0);
 }
 
@@ -195,38 +220,64 @@ int		main(int argc, char **argv)
 	datas.c_offset = 0x0;
 	datas.c_size = 0x0;
 
-	if (argc != 3)
+	if (argc != 2)
 	{
-		printf("Usage: %s <binary> <packer>\n", argv[0]);
+		printf("Usage: %s <binary>\n", argv[0]);
 		return (-1);
 	}
 
-	if (file_map(argv[1], &(datas.f_map), &(datas.f_size)) == -1)
+	if (file_copy(argv[1], TARGET_FILE) == -1)
 	{
-		printf("Error: unable to mmap : %s\n", argv[1]);
+		printf("Error: unable to copy binary file\n");
 		return (-1);
 	}
-
-	if (file_map(argv[2], &(datas.p_map), &(datas.p_size)) == -1)
+	else
 	{
-		printf("Error: unable to mmap : %s\n", argv[1]);
+		printf("Debug: %s copied to %s\n", argv[1], TARGET_FILE);
+	}
+
+	if (file_map(TARGET_FILE, &(datas.f_map), &(datas.f_size)) == -1)
+	{
+		printf("Error: unable to mmap : %s\n", TARGET_FILE);
 		return (-1);
+	}
+	else
+	{
+		printf("Debug: target '%s' mmaped\n", TARGET_FILE);
+	}
+
+	if (file_map(PACKER_FILE, &(datas.p_map), &(datas.p_size)) == -1)
+	{
+		printf("Error: unable to mmap : %s\n", PACKER_FILE);
+		return (-1);
+	}
+	else
+	{
+		printf("Debug: packer '%s' mmaped\n", PACKER_FILE);
 	}
 
 	if (elf64_is_valid((Elf64_Ehdr *)datas.f_map) == -1)
 	{
-		printf("Error: %s ELF header is not valid\n", argv[1]);
+		printf("Error: target '%s' ELF header is not valid\n", TARGET_FILE);
 		file_unmap(datas.f_map, datas.f_size);
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
+	else
+	{
+		printf("Debug: target '%s' has a valid ELF header\n", TARGET_FILE);
+	}
 
 	if (elf64_is_valid((Elf64_Ehdr *)datas.p_map) == -1)
 	{
-		printf("Error: %s ELF header is not valid\n", argv[2]);
+		printf("Error: %s ELF header is not valid\n", PACKER_FILE);
 		file_unmap(datas.f_map, datas.f_size);
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
+	}
+	else
+	{
+		printf("Debug: packer '%s' has a valid ELF header\n", PACKER_FILE);
 	}
 
 	datas.o_entry = ((Elf64_Ehdr *)(datas.f_map))->e_entry;
@@ -235,17 +286,18 @@ int		main(int argc, char **argv)
 		printf("Virtual memory address : 0x%lx\n", datas.v_addr);
 
 	if (elf64_find_sect(datas.f_map, &(datas.fs_offset), &(datas.fs_size), ".text") != -1)
-		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", argv[1], datas.fs_offset, datas.fs_size);
+		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.fs_offset, datas.fs_size);
 
 	if (elf64_find_sect(datas.p_map, &(datas.ps_offset), &(datas.ps_size), ".text") != -1)
-		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", argv[2], datas.ps_offset, datas.ps_size);
+		printf("Section .text of %s : file offset is %lu (%lu bytes)\n", PACKER_FILE, datas.ps_offset, datas.ps_size);
 
 	if (elf64_find_cave(datas.f_map, datas.f_size, datas.ps_size, &(datas.c_offset), &(datas.c_size)) != -1)
-		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", argv[1], datas.c_offset, datas.c_size);
+		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.c_offset, datas.c_size);
 
 	datas.n_entry = datas.v_addr + datas.c_offset;
 
 	printf("Old entry point address : 0x%lu\n", datas.o_entry);
+	printf("Old entry point address (diff) : 0x%lu\n", datas.v_addr + datas.fs_offset);
 	printf("New entry point address : 0x%lu\n", datas.n_entry);
 
 	// Inject new content
