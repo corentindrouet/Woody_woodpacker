@@ -146,10 +146,10 @@ _continue:
 	jmp _decrypt_loop
 
 _end:
-mov rax, 0xa
-mov rdi, 0x11111111
-mov rsi, QWORD [0x22222222] 
-mov rdx, 0x3
-syscall
+    mov rax, 0xa
+    mov rdi, 0x11111111
+    mov rsi, QWORD [0x22222222] 
+    mov rdx, 0x1
+    syscall
 	leave
 	ret
