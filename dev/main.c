@@ -337,7 +337,7 @@ int		main(int argc, char **argv)
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
 
 	// Update return address
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, (uint64_t)datas.o_entry);
+	//elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, (uint64_t)datas.o_entry);
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;

