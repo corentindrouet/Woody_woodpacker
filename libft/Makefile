@@ -125,7 +125,7 @@ $(NAME) : $(BIN)
 
 $(OBJ_PATH)%.o: $(SRC_PATH)%.c
 	@/bin/echo -n "."
-	@gcc -I./ $(FLAG) -o $@ -c $<
+	@clang -I./ $(FLAG) -o $@ -c $<
 
 all : $(NAME)
 

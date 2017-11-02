@@ -22,7 +22,7 @@ int		file_copy(const char *src, const char *dst)
 
 	buf = NULL;
 	fd_src = open(src, O_RDONLY);
-	fd_dst = open(dst, O_RDWR | O_TRUNC | O_CREAT);
+	fd_dst = open(dst, O_RDWR | O_TRUNC | O_CREAT, S_IRWXU | S_IRWXG | S_IRWXO);
 	if (fd_src < 0 || fd_dst < 0)
 		return (file_copy_free(fd_src, fd_dst, &buf));
 	size = file_size(fd_src);

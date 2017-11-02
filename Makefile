@@ -1,5 +1,5 @@
 EXEC		=	woody_woodpacker
-CC			=	gcc
+CC			=	clang
 CFLAGS		=	-Wall -Wextra -Werror
 SRC			=	main \
 				elf64_find_cave \
