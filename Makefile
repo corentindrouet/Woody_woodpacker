@@ -1,30 +1,18 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: rludosan <marvin@42.fr>                    +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2017/03/31 10:26:56 by rludosan          #+#    #+#              #
-#    Updated: 2017/06/07 14:07:30 by rludosan         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 EXEC		=	woody_woodpacker
 CC			=	gcc
 CFLAGS		=	-Wall -Wextra -Werror
-SRC			=	main\
-				infos\
-				open_fds\
-				error_handler\
-				check_elf\
-				file_size\
-				copy_file\
-				mine_cave\
-				packer_infect\
-				encrypt\
-				decrypt\
-				encryption
+SRC			=	main \
+				elf64_find_cave \
+				elf64_find_sect \
+				elf64_find_vaddr \
+				elf64_is_valid \
+				elf64_update_asm \
+				encryption \
+				file_copy \
+				file_map \
+				file_size \
+				file_unmap
+
 OBJ			=	$(addsuffix .o, $(SRC))
 
 all: $(EXEC)

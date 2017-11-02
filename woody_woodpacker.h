@@ -20,79 +20,61 @@
 #define E_INFECT	7
 
 #define TARGET_FILE	"woody"
+#define PACKER_FILE	"packer"
 
 /*
 ** This structures holds all the basics infos
 */
 
-typedef struct		s_infos
+typedef struct		s_datas
 {
-	int				src_fd;
-	int				dst_fd;
-	ssize_t			file_size;
-	size_t			old_entry;
-	size_t			new_entry;
-	size_t			image_base;
-	ssize_t			cave_offset;
-	size_t			textsect_offset;
-	size_t			textsect_size;
-	unsigned char	*key_stream;
-	size_t			key_length;
-	char			*packer_code;
-}					t_infos;
+	void			*f_map;			/* Binary mmap pointer */
+	size_t			f_size;			/* Binary file size */
+	void			*p_map;			/* Packer mmap pointer */
+	size_t			p_size;			/* Packer file size */
+	uint64_t		o_entry;		/* Old entry point */
+	uint64_t		n_entry;		/* New entry point */
+	uint64_t		v_addr;			/* Virtual base address */
+	off_t			fs_offset;		/* Binary section offset */
+	size_t			fs_size;		/* Binary section size */
+	off_t			ps_offset;		/* Packer section offset */
+	size_t			ps_size;		/* Packer section size */
+	off_t			c_offset;		/* Cave file offset */
+	size_t			c_size;			/* Cave size */
+	unsigned char	*key;			/* Encryption key */
+}					t_datas;
 
 /*
-** Infos struct init and destroy
+** Tests
 */
-void				infos_destroy(t_infos *infos);
-t_infos				*infos_init(const char *src, const char *dst);
+
+void				ft_xor(void *p, size_t l);
 
 /*
-** Open src and dst file descriptors
+** Elf64
 */
-int					open_fds(t_infos *infos, const char *src, const char *dst);
+
+int					elf64_update_asm(void *m, size_t len, uint64_t pat, uint64_t val);
+int					elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset, size_t *c_size);
+int					elf64_find_sect(void *f_map, off_t *s_offset, size_t *s_size, const char *sect);
+int					elf64_find_vaddr(void *f_map, uint64_t *v_addr);
+int					elf64_is_valid(Elf64_Ehdr *ehdr);
 
 /*
-** Error messages handler
+** File
 */
-int					error_handler(int code);
+
+size_t				file_size(int fd);
+int					file_unmap(void *f_map, size_t f_size);
+int					file_map(const char *name, void **f_map, size_t *f_size);
+int					file_copy(const char *src, const char *dst);
 
 /*
-** Checks if file is ELF64
-*/
-int					check_elf(int fd);
-
-/*
-** Computes the file size in bytes
-*/
-int					file_size(t_infos *infos);
-
-/*
-** Copies binary source file
-*/
-int					copy_file(t_infos *infos);
-
-/*
-** Find a code cave
-*/
-int					mine_cave(t_infos *infos);
-
-/*
-** Write packer code into target file
-*/
-int					packer_infect(t_infos *infos);
-
-/*
-** Encryption / Decription
+** Encryption
 */
 
-int					encrypt(t_infos *infos);
-int					decrypt(t_infos *infos, const char *keyfile);
-
-
-unsigned char		*encrypt_zone(char *zone, size_t size);
-void				decrypt_zone(char *zone, size_t zone_size, unsigned char *key, size_t key_size);
-void				*get_random_key(size_t size);
 void				swap(int *a, int *b);
+unsigned char		*encrypt_zone(char *zone, size_t size);
+void				*get_random_key(size_t size);
 
 #endif

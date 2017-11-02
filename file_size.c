@@ -1,12 +1,15 @@
 #include "woody_woodpacker.h"
 
-int		file_size(t_infos *infos)
+size_t	file_size(int fd)
 {
-	off_t	ret;
-	
-	lseek(infos->src_fd, 0, SEEK_SET);
-	ret = lseek(infos->src_fd, 0, SEEK_END);
-	lseek(infos->src_fd, 0, SEEK_SET);
-	infos->file_size = (ret <= 0 ) ? 0 : (uint32_t)ret;
-	return (ret);
+	off_t	off;
+
+	if (fd < 0)
+		return (0);
+	lseek(fd, 0, SEEK_SET);
+	off = lseek(fd, 0, SEEK_END);
+	lseek(fd, 0, SEEK_SET);
+	if (off == -1)
+		return (0);
+	return ((size_t)off);
 }

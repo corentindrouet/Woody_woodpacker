@@ -1,6 +1,6 @@
 #include "woody_woodpacker.h"
 
-void swap(int *a, int *b)
+void	swap(int *a, int *b)
 {
 	*a = *a + *b;
 	*b = *a - *b;
@@ -15,10 +15,10 @@ void swap(int *a, int *b)
 unsigned char	*encrypt_zone(char *zone, size_t size)
 {
 	unsigned char	*key;
-	int		tab[256];
-	int		i;
-	int		j;
-	size_t	k;
+	int				tab[256];
+	int				i;
+	int				j;
+	size_t			k;
 
 	if (!zone || !size || !(key = get_random_key(256)))
 		return (0);
@@ -55,7 +55,7 @@ void	*get_random_key(size_t size)
 {
 	void	*buffer;
 	int		fd;
-	int	numberRandomBytesReaded;
+	int		numberRandomBytesReaded;
 
 	numberRandomBytesReaded = 0;
 	if ((fd = open("/dev/urandom", O_RDONLY)) == -1)
@@ -64,45 +64,10 @@ void	*get_random_key(size_t size)
 		return (NULL);
 	bzero(buffer, size + 1);
 	while (numberRandomBytesReaded < 256)
-	{
+	{	
 		read(fd, (buffer + numberRandomBytesReaded), size - numberRandomBytesReaded);
 		numberRandomBytesReaded = strlen(buffer);
 	}
 	close(fd);
 	return (buffer);
-}
-
-void	decrypt_zone(char *zone, size_t zone_size, unsigned char *key, size_t key_size)
-{
-	int		tab[256];
-	int		i;
-	int		j;
-	size_t	k;
-
-	i = -1;
-	while (++i < 4)
-		if (((unsigned long)*(&(zone) - i)) == 0)
-			return ;
-	i = -1;
-	while (++i < 256)
-		tab[i] = i;
-	i = -1;
-	j = 0;
-	while (++i < 256)
-	{
-		j = (j + tab[i] + key[i % key_size]) % 256;
-		swap(&(tab[i]), &(tab[j]));
-	}
-	i = 0;
-	j = 0;
-	k = 0;
-	while (k < zone_size)
-	{
-		i = (i + 1) % 256;
-		j = (j + tab[i]) % 256;
-		swap(&(tab[i]), &(tab[j]));
-		j = (tab[i] + tab[j]) % 256;
-		zone[k] = zone[k] ^ tab[j];
-		k++;
-	}
 }
