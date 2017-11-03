@@ -55,16 +55,14 @@ int		main(int argc, char **argv)
 		printf("Debug: packer '%s' mmaped\n", PACKER_FILE);
 	}
 
-	if (elf64_is_exec((Elf64_Ehdr *)datas.f_map) == -1 || elf64_is_dyn((Elf64_Ehdr *)datas.f_map) == -1)
+	if (elf64_is_exec((Elf64_Ehdr *)datas.f_map) == 0 || elf64_is_dyn((Elf64_Ehdr *)datas.f_map) == 0)
+		printf("Debug: target '%s' has a valid ELF header\n", TARGET_FILE);
+	else
 	{
 		printf("Error: target '%s' ELF header is not valid\n", TARGET_FILE);
 		file_unmap(datas.f_map, datas.f_size);
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
-	}
-	else
-	{
-		printf("Debug: target '%s' has a valid ELF header\n", TARGET_FILE);
 	}
 
 	if (elf64_is_rel((Elf64_Ehdr *)datas.p_map) == -1)
@@ -114,30 +112,33 @@ int		main(int argc, char **argv)
 
 	// Inject encryption key
 	memmove(datas.f_map + datas.c_offset, datas.key, 256);
+	printf("Encryption key injected\n");
 
 	// Inject depacker
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
+	printf("Packer code injected\n");
 
 	// Update return address
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x1111111111111111, (uint64_t)(datas.fs_offset + datas.v_addr));
+	printf("ASM update : .text section address\n");
 
 	// Update return address
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, (uint64_t)datas.fs_size);
+	printf("ASM update : .text section size\n");
 
 	// Update return address
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x3333333333333333, (uint64_t)datas.n_entry - 256);
+	printf("ASM update : key location address\n");
 
 	// Update return address
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x4444444444444444, (uint64_t)datas.o_entry);
+	printf("ASM update : return address\n");
 
-	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
-	uint64_t tmp_l = datas.v_addr + datas.fs_offset + datas.fs_size;
-
-	printf("Page align address is : 0x%lx\n", (uint64_t)(tmp_p & -4096));
-	printf("Page align address size : 0x%lx\n", (uint64_t)(tmp_l - (tmp_p & -4096)));
-
+	// uint64_t tmp_p = datas.v_addr + datas.fs_offset;
+	// uint64_t tmp_l = datas.v_addr + datas.fs_offset + datas.fs_size;
+	// printf("Page align address is : 0x%lx\n", (uint64_t)(tmp_p & -4096));
+	// printf("Page align address size : 0x%lx\n", (uint64_t)(tmp_l - (tmp_p & -4096)));
 	// elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, (uint64_t)(tmp_p & -4096));
-
 	// elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, (uint64_t)(tmp_l - (tmp_p & -4096)));
 
 	// Change entry point
