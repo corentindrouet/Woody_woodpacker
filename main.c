@@ -134,12 +134,14 @@ int		main(int argc, char **argv)
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x4444444444444444, (uint64_t)datas.o_entry);
 	printf("ASM update : return address\n");
 
-	// uint64_t tmp_p = datas.v_addr + datas.fs_offset;
-	// uint64_t tmp_l = datas.v_addr + datas.fs_offset + datas.fs_size;
-	// printf("Page align address is : 0x%lx\n", (uint64_t)(tmp_p & -4096));
-	// printf("Page align address size : 0x%lx\n", (uint64_t)(tmp_l - (tmp_p & -4096)));
-	// elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, (uint64_t)(tmp_p & -4096));
-	// elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, (uint64_t)(tmp_l - (tmp_p & -4096)));
+	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
+	uint64_t tmp_l = datas.v_addr + datas.fs_offset + datas.fs_size;
+
+	printf("Page align address is : 0x%lx\n", (uint64_t)(tmp_p & -4096));
+	printf("Page align address size : 0x%lx\n", (uint64_t)(tmp_l - (tmp_p & -4096)));
+
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, (uint64_t)(tmp_p & -4096));
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, (uint64_t)(tmp_l - (tmp_p & -4096)));
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;

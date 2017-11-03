@@ -14,7 +14,7 @@ _decrypt:
 	mov rax, 0xa
 	mov rdi, 0x11111111
 	;lea rdi, [rel zone]
-	mov rsi, QWORD [0x22222222] 
+	mov rsi, QWORD [0x22222222]
 	mov rdx, 0x3
 	syscall
 	xor rcx, rcx
@@ -105,7 +105,7 @@ _decrypt_loop:
 _end:
 	mov rax, 0xa
 	mov rdi, 0x11111111
-	mov rsi, QWORD [0x22222222] 
+	mov rsi, QWORD [0x22222222]
 	mov rdx, 0x3
 	syscall
 	leave
