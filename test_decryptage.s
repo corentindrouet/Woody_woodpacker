@@ -31,7 +31,7 @@ _start:
     mov rax, 0xa
     mov rdi, 0x5555555555555555
     mov rsi, 0x6666666666666666
-    mov rdx, 0x3
+    mov rdx, 0x7
     syscall
 	call _decrypt
     mov rax, 0xa
