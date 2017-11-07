@@ -69,7 +69,7 @@ _sorting:
     xor r10, r10
     xor r11, r11
     mov r11, 0x3333333333333333
-    mov r10b, [r11 + rcx]
+    mov r10b, BYTE [r11 + rcx]
     add QWORD [rsp + 260], r10
     and QWORD [rsp + 260], 255
     xor r10, r10
