@@ -13,7 +13,7 @@ int		elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset
 	end = 0;
 	off = 0;
 	max = 0;
-	while (((size_t)start != f_size))
+	while (((size_t)start < f_size))
 	{
 		if (end != 0 && (size_t)max >= ps_size + 256)
 		{
@@ -26,7 +26,7 @@ int		elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset
 		else
 		{
 			end = start;
-			while ((size_t)end != f_size && buf[end] == 0)
+			while ((size_t)end < f_size && buf[end] == 0)
 				end++;
 			if ((end - start) > max)
 			{

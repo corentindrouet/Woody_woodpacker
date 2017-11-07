@@ -99,6 +99,9 @@ int		main(int argc, char **argv)
 	if (elf64_find_cave(datas.f_map, datas.f_size, datas.ps_size, &(datas.c_offset), &(datas.c_size)) != -1)
 	{
 		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.c_offset, datas.c_size);
+	} else {
+		printf("No code cave found for this binary!\n");
+		return (0);
 	}
 
 	// We move at cave offset + 256 because the first 256 bytes are used to hold the encryption key
