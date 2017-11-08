@@ -45,100 +45,136 @@ _start:
 _decrypt:
     push rbp
     mov rbp, rsp
-    sub rsp, 0x12c
+    sub rsp, 0x490 ;0x12c
     xor rcx, rcx
 
 _init_table:
     cmp rcx, 0x100
     jge _init_sorting
-    mov BYTE [rsp + rcx], cl
+    xor r10, r10
+    mov r10, 4
+    xor rax, rax
+    mov rax, rcx
+    mul r10
+    mov DWORD [rsp + rax], ecx
     inc rcx
     jmp _init_table
 
 _init_sorting:
     xor rcx, rcx
-    mov r10, QWORD [rsp + 260]
-    xor QWORD [rsp + 260], r10
+    mov r10, QWORD [rsp + 1040]
+    xor QWORD [rsp + 1040], r10
 
 _sorting:
     cmp rcx, 0x100
     jge _init_decrypt_loop
+    xor r12, r12
+    mov r12, 4
+    xor rax, rax
+    mov rax, rcx
+    mul r12
     xor r10, r10
-    mov r10b, [rsp + rcx]
-    add QWORD [rsp + 260], r10
-    xor r10, r10
+    mov r10d, DWORD [rsp + rax]
+    add QWORD [rsp + 1040], r10
     xor r11, r11
     mov r11, 0x3333333333333333
-    mov r10b, BYTE [r11 + rcx]
-    add QWORD [rsp + 260], r10
-    and QWORD [rsp + 260], 255
     xor r10, r10
-    mov r10b, BYTE [rsp + 260]
-    lea rdi, [rel rsp + rcx]
-    lea rsi, [rel rsp + r10]
-    inc rcx
+    mov r10b, BYTE [r11 + rcx]
+    add QWORD [rsp + 1040], r10
+    and QWORD [rsp + 1040], 255
+    lea rdi, [rel rsp + rax]
+    xor r10, r10
+    mov r10b, BYTE [rsp + 1040]
+    xor rax, rax
+    xor r12, r12
+    mov r12, 4
+    mov rax, r10
+    mul r12
+    lea rsi, [rel rsp + rax]
 
 _swap:
-	xor r10, r10
-	mov r10b, BYTE [rdi]
-	xor r11, r11
-	mov r11b, BYTE [rsi]
-	mov BYTE [rdi], r11b
-	mov BYTE [rsi], r10b
-;	pop rax
-	jmp _sorting
+    xor r10, r10
+    xor r11, r11
+    mov r10d, DWORD [rdi]
+    mov r11d, DWORD [rsi]
+    add DWORD [rdi], r11d
+    mov r10d, DWORD [rdi]
+    sub r10, r11
+    mov DWORD [rsi], r10d
+    mov r11d, DWORD [rsi]
+    sub DWORD [rdi], r11d
+    inc rcx
+    jmp _sorting
 
 _init_decrypt_loop:
 	xor r10, r10
-	mov r10, QWORD [rsp + 260]
-	xor QWORD [rsp + 260], r10
+	mov r10, QWORD [rsp + 1040]
+	xor QWORD [rsp + 1040], r10
 	xor r10, r10
-	mov r10, QWORD [rsp + 268]
-	xor QWORD [rsp + 268], r10
+	mov r10, QWORD [rsp + 1048]
+	xor QWORD [rsp + 1048], r10
 	xor rcx, rcx
 
 _decrypt_loop:
-;    xor r10, r10
+    xor r10, r10
     mov r10, 0x2222222222222222
 	cmp rcx, r10
 	jge _end
-	add QWORD [rsp + 260], 1
-	and QWORD [rsp + 260], 255
+	add QWORD [rsp + 1040], 1
+	and QWORD [rsp + 1040], 255
 	xor r10, r10
-	mov r10, QWORD [rsp + 260]
-	lea rdi, [rel rsp + r10]
+	mov r10, QWORD [rsp + 1040]
+    xor r12, r12
+    xor rax, rax
+    mov r12, 4
+    mov rax, r10
+    mul r12
+	lea rdi, [rel rsp + rax]
 	xor r10, r10
-	mov r10b, BYTE [rdi]
-	add QWORD [rsp + 268], r10
-	and QWORD [rsp + 268], 255
+	mov r10d, DWORD [rdi]
+	add QWORD [rsp + 1048], r10
+	and QWORD [rsp + 1048], 255
 	xor r10, r10
-	mov r10, QWORD [rsp + 268]
-	lea rsi, [rel rsp + r10]
-;	push rel _continue
-;	jmp _swap
+	mov r10, QWORD [rsp + 1048]
+    xor r12, r12
+    xor rax, rax
+    mov r12, 4
+    mov rax, r10
+    mul r12
+	lea rsi, [rel rsp + rax]
 
 _swap2:
-	xor r10, r10
-	mov r10b, BYTE [rdi]
-	xor r11, r11
-	mov r11b, BYTE [rsi]
-	mov BYTE [rdi], r11b
-	mov BYTE [rsi], r10b
+    xor r10, r10
+    xor r11, r11
+    mov r10d, DWORD [rdi]
+    mov r11d, DWORD [rsi]
+    add DWORD [rdi], r11d
+    mov r10d, DWORD [rdi]
+    sub r10, r11
+    mov DWORD [rsi], r10d
+    mov r11d, DWORD [rsi]
+    sub DWORD [rdi], r11d
 
 _continue:
-	mov r10, QWORD [rsp + 268]
-	xor QWORD [rsp + 268], r10
+    xor r10, r10
+	mov r10, QWORD [rsp + 1048]
+	xor QWORD [rsp + 1048], r10
 	xor r10, r10
-	mov r10b, BYTE [rdi]
+	mov r10d, DWORD [rdi]
 	xor r11, r11
-	mov r11b, BYTE [rsi]
-	add QWORD [rsp + 268], r10
-	add QWORD [rsp + 268], r11
-	and QWORD [rsp + 268], 255
+	mov r11d, DWORD [rsi]
+	add QWORD [rsp + 1048], r10
+	add QWORD [rsp + 1048], r11
+	and QWORD [rsp + 1048], 255
 	xor r11, r11
-	mov r11, QWORD [rsp + 268]
+	mov r11, QWORD [rsp + 1048]
+    xor r12, r12
+    xor rax, rax
+    mov r12, 4
+    mov rax, r11
+    mul r12
 	xor r10, r10
-	mov r10b, BYTE [rsp + r11]
+	mov r10d, DWORD [rsp + rax]
     xor r11, r11
     mov r11, 0x1111111111111111
 	xor BYTE [r11 + rcx], r10b
