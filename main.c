@@ -138,7 +138,7 @@ int		main(int argc, char **argv)
 	printf("ASM update : return address\n");
 
 	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
-	uint64_t tmp_l = datas.v_addr + datas.fs_offset + datas.fs_size;
+	uint64_t tmp_l = datas.fs_offset + datas.fs_size;
 
 	printf("offset      : 0x%lx\n", tmp_p);
 	printf("size        : 0x%lx\n", tmp_l);
@@ -148,7 +148,7 @@ int		main(int argc, char **argv)
 	printf("new spread  : %lu\n", tmp_l - tmp_p);
 
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, tmp_p);
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, tmp_l - tmp_p);
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, tmp_l);
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
