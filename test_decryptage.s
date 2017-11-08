@@ -33,9 +33,28 @@ _start:
     mov rsi, 0x6666666666666666
     mov rdx, 0x7
     syscall
+    call _print_str
 	call _decrypt
     mov rax, 0x4444444444444444
 	jmp rax
+
+_print_str:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+    mov rdi, 0x00000a2e2e2e2e59
+    push rdi
+    mov rdi, 0x444f4f572e2e2e2e
+    push rdi
+    mov rdi, 1
+    mov rsi, rsp
+    mov rdx, 14
+    mov rax, 1
+    syscall
+    pop rdi
+    pop rdi
+    leave
+    ret
 
 _decrypt:
     push rbp
