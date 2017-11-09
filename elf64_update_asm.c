@@ -13,7 +13,7 @@ int		elf64_update_asm(void *m, size_t len, uint64_t pat, uint64_t val)
 		n = *((uint64_t *)(p + i));
 		if (n == pat)
 		{
-			printf("++ replace address found ! replacing: %#lx by : %#lx\n", n, val);
+			// printf("++ replace address found ! replacing: %#lx by : %#lx\n", n, val);
 			*((uint64_t *)(p + i)) = val;
 		}
 		i++;

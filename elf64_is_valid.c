@@ -9,7 +9,6 @@ int		elf64_is_valid(Elf64_Ehdr *ehdr)
 	{
 		return (-1);
 	}
-	printf("Debug: e_type = %d\n", ehdr->e_type);
 	return (0);
 }
 

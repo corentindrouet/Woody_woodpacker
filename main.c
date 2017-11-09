@@ -30,19 +30,11 @@ int		main(int argc, char **argv)
 		printf("Error: unable to copy binary file\n");
 		return (-1);
 	}
-	else
-	{
-		printf("Debug: %s copied to %s\n", argv[1], TARGET_FILE);
-	}
 
 	if (file_map(TARGET_FILE, &(datas.f_map), &(datas.f_size)) == -1)
 	{
 		printf("Error: unable to mmap : %s\n", TARGET_FILE);
 		return (-1);
-	}
-	else
-	{
-		printf("Debug: target '%s' mmaped\n", TARGET_FILE);
 	}
 
 	if (file_map(PACKER_FILE, &(datas.p_map), &(datas.p_size)) == -1)
@@ -50,14 +42,8 @@ int		main(int argc, char **argv)
 		printf("Error: unable to mmap : %s\n", PACKER_FILE);
 		return (-1);
 	}
-	else
-	{
-		printf("Debug: packer '%s' mmaped\n", PACKER_FILE);
-	}
 
-	if (elf64_is_exec((Elf64_Ehdr *)datas.f_map) == 0 || elf64_is_dyn((Elf64_Ehdr *)datas.f_map) == 0)
-		printf("Debug: target '%s' has a valid ELF header\n", TARGET_FILE);
-	else
+	if (elf64_is_exec((Elf64_Ehdr *)datas.f_map) == -1)
 	{
 		printf("Error: target '%s' ELF header is not valid\n", TARGET_FILE);
 		file_unmap(datas.f_map, datas.f_size);
@@ -72,54 +58,46 @@ int		main(int argc, char **argv)
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
-	else
-	{
-		printf("Debug: packer '%s' has a valid ELF header\n", PACKER_FILE);
-	}
 
 	datas.o_entry = ((Elf64_Ehdr *)(datas.f_map))->e_entry;
 
-	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr)) == 0)
+	if (elf64_find_sect(datas.f_map, &(datas.fs_offset), &(datas.fs_size), ".text") == -1)
 	{
-		printf("Virtual memory address : %#lx\n", datas.v_addr);
+		printf("Error: %s .text section not found\n", TARGET_FILE);
+		file_unmap(datas.f_map, datas.f_size);
+		file_unmap(datas.p_map, datas.p_size);
+		return (-1);
 	}
 
-	if (elf64_find_sect(datas.f_map, &(datas.fs_offset), &(datas.fs_size), ".text") != -1)
+	if (elf64_find_sect(datas.p_map, &(datas.ps_offset), &(datas.ps_size), ".text") == -1)
 	{
-		printf("Section .text of %s : file offset is %lu (%lu - %#lx bytes)\n", TARGET_FILE, datas.fs_offset, datas.fs_size, datas.fs_size);
-		*((int *)(datas.f_map + 0x09)) = datas.fs_offset;
-		*((short *)(datas.f_map + 0x0d)) = datas.fs_size;
+		printf("Error: %s .text section not found\n", TARGET_FILE);
+		file_unmap(datas.f_map, datas.f_size);
+		file_unmap(datas.p_map, datas.p_size);
+		return (-1);
 	}
 
-	if (elf64_find_sect(datas.p_map, &(datas.ps_offset), &(datas.ps_size), ".text") != -1)
+	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr), datas.ps_size + 256, &(datas.c_offset), &(datas.c_size)) == -1)
 	{
-		printf("Section .text of %s : file offset is %lu (%lu - %#lx bytes)\n", PACKER_FILE, datas.ps_offset, datas.ps_size, datas.ps_size);
+		printf("Error: %s doesn't contain enough space for packer\n", TARGET_FILE);
+		file_unmap(datas.f_map, datas.f_size);
+		file_unmap(datas.p_map, datas.p_size);
+		return (-1);
 	}
 
-	if (elf64_find_cave(datas.f_map, datas.f_size, datas.ps_size, &(datas.c_offset), &(datas.c_size)) != -1)
-	{
-		printf("Code cave in %s : file offset is %lu (%lu bytes)\n", TARGET_FILE, datas.c_offset, datas.c_size);
-	} else {
-		printf("No code cave found for this binary!\n");
-		return (0);
-	}
-
-	// We move at cave offset + 256 because the first 256 bytes are used to hold the encryption key
 	datas.n_entry = datas.v_addr + datas.c_offset + 256;
-
-	printf("Old entry point address : %#lx\n", datas.o_entry);
-	printf("New entry point address : %#lx\n", datas.n_entry);
+	printf("[+] Replacing entry points from %#lx to %#lx\n", datas.o_entry, datas.n_entry);
 
 	// Encrypt .text zone
 	datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
 
 	// Inject encryption key
 	memmove(datas.f_map + datas.c_offset, datas.key, 256);
-	printf("Encryption key injected\n");
+	printf("[+] Encryption key injected\n");
 
 	// Inject depacker
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
-	printf("Packer code injected\n");
+	printf("[+] Packer code injected\n");
 
 	// Update return address
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x1111111111111111, (uint64_t)(datas.fs_offset + datas.v_addr));
@@ -139,16 +117,13 @@ int		main(int argc, char **argv)
 
 	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
 	uint64_t tmp_l = datas.fs_offset + datas.fs_size;
-
-	printf("offset      : 0x%lx\n", tmp_p);
-	printf("size        : 0x%lx\n", tmp_l);
-	printf("spread      : %lu\n", tmp_l - tmp_p);
 	tmp_p = tmp_p - (tmp_p % 4096);
-	printf("page offset : 0x%lx\n", tmp_p);
-	printf("new spread  : %lu\n", tmp_l - tmp_p);
 
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, tmp_p);
+	printf("ASM update : mprotect zone start\n");
+
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, tmp_l);
+	printf("ASM update : mprotect zone length\n");
 
 	// Change entry point
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
