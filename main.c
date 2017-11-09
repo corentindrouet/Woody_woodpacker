@@ -26,7 +26,7 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
-	printf("Mapping depacker code ...\n");
+	printf("Mapping depacker file ...\n");
 
 	// Mmap packer file
 	if (file_map(PACKER_FILE, &(datas.p_map), &(datas.p_size), 0) == -1)
@@ -95,7 +95,7 @@ int		main(int argc, char **argv)
 	// Release source file
 	file_unmap(datas.f_map, datas.f_size);
 
-	printf("Mapping destination file ...\n");
+	printf("Copying source file ...\n");
 
 	// Copy source file into destination file (bin -> woody)
 	if (file_copy(argv[1], TARGET_FILE) == -1)
@@ -105,6 +105,8 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
+	printf("Mapping destination file ...\n");
+
 	// Mmap destination file
 	if (file_map(TARGET_FILE, &(datas.f_map), &(datas.f_size), 1) == -1)
 	{
@@ -112,6 +114,8 @@ int		main(int argc, char **argv)
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
+	else
+		printf("%s file mmaped !\n", TARGET_FILE);
 
 	printf("Encrypting destination file ...\n");
 
