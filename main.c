@@ -114,8 +114,6 @@ int		main(int argc, char **argv)
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
-	else
-		printf("%s file mmaped !\n", TARGET_FILE);
 
 	printf("Encrypting destination file ...\n");
 
