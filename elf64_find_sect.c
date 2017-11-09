@@ -21,7 +21,6 @@ int		elf64_find_sect(void *f_map, off_t *s_offset, size_t *s_size, const char *s
 		{
 			*s_offset = stable.sh_offset;
 			*s_size = stable.sh_size;
-			printf("[+] Section .text of %s is at file offset %lu (%#lx bytes)\n", TARGET_FILE, stable.sh_offset, stable.sh_size);
 			return (0);
 		}
 		i++;

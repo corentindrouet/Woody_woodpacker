@@ -58,7 +58,6 @@ void				ft_xor(void *p, size_t l);
 int					elf64_update_asm(void *m, size_t len, uint64_t pat, uint64_t val);
 int					elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset, size_t *c_size);
 int					elf64_find_sect(void *f_map, off_t *s_offset, size_t *s_size, const char *sect);
-// int					elf64_find_vaddr(void *f_map, uint64_t *v_addr);
 int					elf64_find_vaddr(void *f_map, uint64_t *v_addr, size_t ps_size, off_t *c_offset, size_t *c_size);
 int					elf64_is_valid(Elf64_Ehdr *ehdr);
 int					elf64_is_rel(Elf64_Ehdr *ehdr);
@@ -71,7 +70,7 @@ int					elf64_is_dyn(Elf64_Ehdr *ehdr);
 
 size_t				file_size(int fd);
 int					file_unmap(void *f_map, size_t f_size);
-int					file_map(const char *name, void **f_map, size_t *f_size);
+int					file_map(const char *name, void **f_map, size_t *f_size, int prot);
 int					file_copy(const char *src, const char *dst);
 
 /*

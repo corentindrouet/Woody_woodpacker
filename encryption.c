@@ -23,12 +23,12 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 	if (!zone || !size || !(key = get_random_key(256)))
 		return (0);
 	i = -1;
-	printf("> First encryption step, key:%s\n", key);
+	printf("Encryption key :\n%s\n", key);
 	while (++i < 256)
 		tab[i] = i;
 	i = -1;
 	j = 0;
-	printf("> Second encryption step\n");
+	// printf("> Second encryption step\n");
 	while (++i < 256)
 	{
 		j = (j + tab[i] + key[i % 256]) % 256;
@@ -37,7 +37,7 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 	i = 0;
 	j = 0;
 	k = 0;
-	printf("> Third encryption step\n");
+	// printf("> Third encryption step\n");
 	while (k < size)
 	{
 		i = (i + 1) % 256;
@@ -47,7 +47,7 @@ unsigned char	*encrypt_zone(char *zone, size_t size)
 		zone[k] = zone[k] ^ tab[j];
 		k++;
 	}
-	printf("> Done\n");
+	// printf("> Done\n");
 	return (key);
 }
 
@@ -64,7 +64,7 @@ void	*get_random_key(size_t size)
 		return (NULL);
 	bzero(buffer, size + 1);
 	while (numberRandomBytesReaded < 256)
-	{	
+	{
 		read(fd, (buffer + numberRandomBytesReaded), size - numberRandomBytesReaded);
 		numberRandomBytesReaded = ft_strlen(buffer);
 	}
