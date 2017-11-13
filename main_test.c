@@ -1,5 +1,20 @@
 #include "woody_woodpacker.h"
 
+void    f_xor(void *ptr, size_t len)
+{
+	size_t  cmp;
+	char	*tmp;
+
+	tmp = (char *)ptr;
+	cmp = 0;
+	while (cmp < len)
+	{
+		tmp[cmp] ^= 120;
+		cmp++;
+	}
+}
+
+
 int		main(int argc, char **argv)
 {
 	t_datas		datas;
@@ -113,12 +128,29 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
+	// Crypt zone
+	f_xor(datas.f_map + datas.fs_offset, datas.fs_size);
+
 	// Inject code
 	printf("Injecting depacker code ...\n");
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
 	printf("[+] Update ASM code for code jump\n");
 	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x1111111111111111, (uint64_t)(datas.o_entry));
 
+	// Updating depacker offsets
+	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
+	uint64_t tmp_l = datas.fs_offset + datas.fs_size;
+	tmp_p = tmp_p - (tmp_p % 4096);
+
+	// ASM update for mprotect
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, tmp_p);
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x3333333333333333, tmp_l);
+	
+	// ASM update for xor loop
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x4444444444444444, (uint64_t)(datas.v_addr + datas.fs_offset));
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, (uint64_t)datas.fs_size);
+
+	// Entry point update
 	printf("Updating entry point ...\n");
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
 
