@@ -22,6 +22,8 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr, size_t ps_size, off_t *c_of
 			{
 				// Next segment
 				n_phdr = (Elf64_Phdr *)(f_map + ehdr->e_phoff + ((i + 1) * sizeof(Elf64_Phdr)));
+				printf("[+] Space need by packer : %lu\n", ps_size);
+				printf("[+] Space between two pt_load segments : %lu bytes\n", n_phdr->p_offset - (c_phdr->p_offset + c_phdr->p_filesz));
 				if ((n_phdr->p_offset - (c_phdr->p_offset + c_phdr->p_filesz)) > ps_size)
 				{
 					// Save offset and size available for injection

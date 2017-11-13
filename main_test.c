@@ -92,6 +92,7 @@ int		main(int argc, char **argv)
 
 	// Save source file new entry point
 	datas.n_entry = datas.v_addr + datas.c_offset + 256;
+	printf("[+] Updated target file entry point is 0x%lx\n", datas.n_entry);
 
 	// Release source file
 	file_unmap(datas.f_map, datas.f_size);
@@ -112,37 +113,19 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
-	// Encrypt .text zone
-	datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
-	printf("[+] Target file encrypted at 0x%lx for %lu bytes\n", datas.fs_offset, datas.fs_size);
-
-	// Inject encryption key
-	memmove(datas.f_map + datas.c_offset, datas.key, 256);
-	printf("[+] Encryption key injected at 0x%lx\n", datas.c_offset);
-
-	// Inject depacker
+	// Inject code
+	printf("Injecting depacker code ...\n");
 	memmove(datas.f_map + datas.c_offset + 256, datas.p_map + datas.ps_offset, datas.ps_size);
-	printf("[+] Depacker code injected at 0x%lx\n", datas.c_offset + 256);
+	printf("[+] Update ASM code for code jump\n");
+	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x1111111111111111, (uint64_t)(datas.o_entry));
 
-	// Updating depacker offsets
-	uint64_t tmp_p = datas.v_addr + datas.fs_offset;
-	uint64_t tmp_l = datas.fs_offset + datas.fs_size;
-	tmp_p = tmp_p - (tmp_p % 4096);
-
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x1111111111111111, (uint64_t)(datas.fs_offset + datas.v_addr));
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x2222222222222222, (uint64_t)datas.fs_size);
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x3333333333333333, (uint64_t)datas.n_entry - 256);
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x4444444444444444, (uint64_t)datas.o_entry);
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x5555555555555555, tmp_p);
-	elf64_update_asm(datas.f_map + datas.c_offset + 256, datas.ps_size, 0x6666666666666666, tmp_l);
-	printf("[+] ASM addresses updated\n"); 
-
+	printf("Updating entry point ...\n");
 	((Elf64_Ehdr *)(datas.f_map))->e_entry = datas.n_entry;
-	printf("[+] Entry point updated from 0x%lx to 0x%lx\n", datas.o_entry, datas.n_entry);
 
 	file_unmap(datas.f_map, datas.f_size);
 	file_unmap(datas.p_map, datas.p_size);
-	printf("-- Encryption done --\n");
+
+	printf("Encryption done !\n");
 
 	return (0);
 }

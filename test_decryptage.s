@@ -28,6 +28,9 @@ section .text
 	global _decrypt
 
 _start:
+	push rbp
+	mov rbp, rsp
+
     mov rax, 0xa
     mov rdi, 0x5555555555555555
     mov rsi, 0x6666666666666666
@@ -36,6 +39,9 @@ _start:
     call _print_str
 	call _decrypt
     mov rax, 0x4444444444444444
+
+	pop rbp
+
 	jmp rax
 
 _print_str:
