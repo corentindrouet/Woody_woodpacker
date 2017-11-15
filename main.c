@@ -69,6 +69,14 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
+	// Find source file PT_LOAD executable segment
+	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr), datas.ps_size + 256, &(datas.c_offset), &(datas.c_size)) == -1)
+	{
+		printf("Error: %s doesn't contain enough space for packer\n", TARGET_FILE);
+		file_unmap(datas.f_map, datas.f_size);
+		return (-1);
+	}
+
 	// Save source file entry point
 	datas.o_entry = ((Elf64_Ehdr *)(datas.f_map))->e_entry;
 	printf("[+] Actual target file entry point is 0x%lx\n", datas.o_entry);
@@ -101,11 +109,11 @@ int		main(int argc, char **argv)
 		return (-1);
 	}
 
-	// Find source file PT_LOAD executable segment
-	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr), datas.ps_size + 256, &(datas.c_offset), &(datas.c_size)) == -1)
+	// Update PT_LOAD segment size (actual size + packer size + key size)
+	if (elf64_update_vaddr(datas.f_map, datas.ps_size + 256) == -1)
 	{
-		printf("Error: %s doesn't contain enough space for packer\n", TARGET_FILE);
-		file_unmap(datas.f_map, datas.f_size);
+		printf("Error: Unable to increase PT_LOAD segment\n");
+		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
 

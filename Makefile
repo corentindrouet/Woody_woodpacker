@@ -5,6 +5,7 @@ SRC			=	main \
 				elf64_find_cave \
 				elf64_find_sect \
 				elf64_find_vaddr \
+				elf64_update_vaddr \
 				elf64_is_valid \
 				elf64_update_asm \
 				encryption \

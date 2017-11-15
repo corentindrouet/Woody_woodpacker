@@ -59,6 +59,7 @@ int					elf64_update_asm(void *m, size_t len, uint64_t pat, uint64_t val);
 int					elf64_find_cave(void *f_map, size_t f_size, size_t ps_size, off_t *c_offset, size_t *c_size);
 int					elf64_find_sect(void *f_map, off_t *s_offset, size_t *s_size, const char *sect);
 int					elf64_find_vaddr(void *f_map, uint64_t *v_addr, size_t ps_size, off_t *c_offset, size_t *c_size);
+int					elf64_update_vaddr(void *f_map, size_t ps_size);
 int					elf64_is_valid(Elf64_Ehdr *ehdr);
 int					elf64_is_rel(Elf64_Ehdr *ehdr);
 int					elf64_is_exec(Elf64_Ehdr *ehdr);
