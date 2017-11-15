@@ -12,7 +12,7 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr, size_t ps_size, off_t *c_of
 	while (i < ehdr->e_phnum)
 	{
 		c_phdr = (Elf64_Phdr *)(f_map + ehdr->e_phoff + (i * sizeof(Elf64_Phdr)));
-		if (c_phdr->p_type == PT_LOAD && c_phdr->p_flags & 0x011)
+		if (c_phdr->p_type == PT_LOAD && (c_phdr->p_flags & (PF_R | PF_X)))
 		{
 			// Virtual memory base address
 			*v_addr = c_phdr->p_vaddr;
@@ -29,6 +29,8 @@ int		elf64_find_vaddr(void *f_map, uint64_t *v_addr, size_t ps_size, off_t *c_of
 					// Save offset and size available for injection
 					*c_offset = c_phdr->p_offset + c_phdr->p_filesz;
 					*c_size = n_phdr->p_offset - (c_phdr->p_offset + c_phdr->p_filesz);
+                    c_phdr->p_filesz += ps_size;
+                    c_phdr->p_memsz += ps_size;
 					return (0);
 				}
 				else

@@ -82,17 +82,6 @@ int		main(int argc, char **argv)
 	}
 	printf("[+] Target file .text section found at offset %lu (%lu bytes)\n", datas.fs_offset, datas.fs_size);
 
-	// Find source file PT_LOAD executable segment
-	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr), datas.ps_size + 256, &(datas.c_offset), &(datas.c_size)) == -1)
-	{
-		printf("Error: %s doesn't contain enough space for packer\n", TARGET_FILE);
-		file_unmap(datas.f_map, datas.f_size);
-		return (-1);
-	}
-
-	// Save source file new entry point
-	datas.n_entry = datas.v_addr + datas.c_offset + 256;
-
 	// Release source file
 	file_unmap(datas.f_map, datas.f_size);
 
@@ -111,6 +100,17 @@ int		main(int argc, char **argv)
 		file_unmap(datas.p_map, datas.p_size);
 		return (-1);
 	}
+
+	// Find source file PT_LOAD executable segment
+	if (elf64_find_vaddr(datas.f_map, &(datas.v_addr), datas.ps_size + 256, &(datas.c_offset), &(datas.c_size)) == -1)
+	{
+		printf("Error: %s doesn't contain enough space for packer\n", TARGET_FILE);
+		file_unmap(datas.f_map, datas.f_size);
+		return (-1);
+	}
+
+	// Save source file new entry point
+	datas.n_entry = datas.v_addr + datas.c_offset + 256;
 
 	// Encrypt .text zone
 	datas.key = encrypt_zone((char *)(datas.f_map + datas.fs_offset), datas.fs_size);
