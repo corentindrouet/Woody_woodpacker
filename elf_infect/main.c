@@ -188,14 +188,18 @@ int		main(int ac, char **av)
 	int				pad;
 	int				i;
 	unsigned char	*key;
+	uint64_t		tmp_p;
+	uint64_t		tmp_l;
 
-	if (ac != 3)
+	// Check arguments
+	if (ac != 2)
 	{
-		printf("Usage: ./%s <host> <virus>\n", av[0]);
+		printf("Usage: ./%s <host>\n", av[0]);
 		return (-1);
 	}
 
-	if (mmap_file(av[1], &host) == -1 || mmap_file(av[2], &virus) == -1)
+	// Mmap files
+	if (mmap_file(av[1], &host) == -1 || mmap_file("./packer", &virus) == -1)
 	{
 		printf("Error: Unable to open target file(s)\n");
 		munmap_file(&host);
@@ -203,6 +207,7 @@ int		main(int ac, char **av)
 		return (-1);
 	}
 
+	// Check ELF64 headers
 	if (check_elf64_header((Elf64_Ehdr *)(host.map)) == -1 || check_elf64_header((Elf64_Ehdr *)(virus.map)) == -1)
 	{
 		printf("Error: Invalid ELF header(s)\n");
@@ -211,6 +216,7 @@ int		main(int ac, char **av)
 		return (-1);
 	}
 
+	// Check ELF type
 	if (((Elf64_Ehdr *)(host.map))->e_type != ET_EXEC)
 	{
 		printf("Error: Host file is not an ET_EXEC\n");
@@ -219,6 +225,7 @@ int		main(int ac, char **av)
 		return (-1);
 	}
 
+	// Find .text section
 	if (find_elf64_section(&host, ".text") == -1 || find_elf64_section(&virus, ".text") == -1)
 	{
 		printf("Error: Unable to find .text section(s)\n");
@@ -227,6 +234,7 @@ int		main(int ac, char **av)
 		return (-1);
 	}
 
+	// Init variables
 	ehdr = (Elf64_Ehdr *)(host.map);
 	phdr = (Elf64_Phdr *)(host.map + ehdr->e_phoff);
 	shdr = (Elf64_Shdr *)(host.map + ehdr->e_shoff);
@@ -236,12 +244,16 @@ int		main(int ac, char **av)
 	i = 0;
 	pad = 0;
 
+	// Update section header table offset
 	ehdr->e_shoff += PAGE_SIZE;
 
+	// Update programs headers
 	for (phnum = 0 ; phnum < ehdr->e_phnum ; phnum++, phdr++)
 	{
 		if (text_found && phdr->p_offset >= virus_offset)
+		{
 			phdr->p_offset += PAGE_SIZE;
+		}
 		else if (phdr->p_type == PT_LOAD && phdr->p_flags & PF_X)
 		{
 			virus_offset = phdr->p_offset + phdr->p_filesz;
@@ -255,14 +267,18 @@ int		main(int ac, char **av)
 		}
 	}
 
+	// Update sections headers
 	for (shnum = 0 ; shnum < ehdr->e_shnum ; shnum++, shdr++)
 	{
+		// Update last section of text segment
 		if (shdr->sh_offset + shdr->sh_size == virus_offset)
 			shdr->sh_size += virus.sh_size + 256;
+		// Update following sections
 		if (shdr->sh_offset >= virus_offset)
 			shdr->sh_offset += PAGE_SIZE;
 	}
 
+	// Open destination file
 	if ((woodyfd = open("woody", O_TRUNC|O_CREAT|O_WRONLY, S_IRUSR|S_IXUSR|S_IWUSR)) < 0)
 	{
 		printf("Error: Unable to create woody\n");
@@ -271,10 +287,12 @@ int		main(int ac, char **av)
 		return (-1);
 	}
 
+	// Encrypt .text section
 	key = encrypt_zone((char *)(host.map + host.sh_offset), host.sh_size);
 
-	uint64_t tmp_p = base_address + host.sh_offset;
-	uint64_t tmp_l = host.sh_offset + host.sh_size;
+	// Patch addresses
+	tmp_p = base_address + host.sh_offset;
+	tmp_l = host.sh_offset + host.sh_size;
 
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x1111111111111111, (uint64_t)(base_address + host.sh_offset));
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x2222222222222222, (uint64_t)(host.sh_size));
@@ -283,21 +301,16 @@ int		main(int ac, char **av)
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x5555555555555555, tmp_p - (tmp_p % 4096));
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x6666666666666666, tmp_l);
 
+	// Write destination file
 	write(woodyfd, host.map, virus_offset);
-
 	write(woodyfd, key, 256);
-
 	write(woodyfd, virus.map + virus.sh_offset, virus.sh_size);
-
 	for (i = 0 ; i < PAGE_SIZE - virus.sh_size - 256 ; i++)
-	{
 		write(woodyfd, &pad, 1);
-	}
-
 	write(woodyfd, host.map + virus_offset, host.size - virus_offset);
 
+	// Close files
 	close(woodyfd);
-
 	munmap_file(&host);
 	munmap_file(&virus);
 	return (0);
