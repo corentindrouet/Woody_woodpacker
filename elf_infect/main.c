@@ -54,15 +54,6 @@ int		main(int ac, char **av)
 
 	// Update section header table offset
 	ehdr->e_shoff += PAGE_SIZE;
-	
-	// Open destination file
-	if ((woodyfd = open("woody", O_TRUNC|O_CREAT|O_WRONLY, S_IRUSR|S_IXUSR|S_IWUSR)) < 0)
-	{
-		printf("Error: Unable to create woody\n");
-		munmap_file(&host);
-		munmap_file(&virus);
-		return (-1);
-	}
 
 	// Encrypt .text section
 	key = encrypt_zone((char *)(host.map + host.sh_offset), host.sh_size);
@@ -76,6 +67,15 @@ int		main(int ac, char **av)
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x4444444444444444, (uint64_t)(old_entry));
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x5555555555555555, tmp_p - (tmp_p % 4096));
 	patch_addr(virus.map + virus.sh_offset, virus.sh_size, 0x6666666666666666, tmp_l);
+
+	// Open destination file
+	if ((woodyfd = open("woody", O_TRUNC|O_CREAT|O_WRONLY, S_IRUSR|S_IXUSR|S_IWUSR)) < 0)
+	{
+		printf("Error: Unable to create woody\n");
+		munmap_file(&host);
+		munmap_file(&virus);
+		return (-1);
+	}
 
 	// Write destination file
 	write(woodyfd, host.map, virus_offset);
