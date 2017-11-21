@@ -7,35 +7,30 @@
 int		check_elf64(t_file *host, const char *hname, t_file *virus, const char *vname)
 {
 	if (!hname || !vname)
+	{
+		printf("Error: Invalid target(s)\n");
 		return (-1);
+	}
 
 	// Mmap files
 	if (mmap_file(hname, host) == -1 || mmap_file(vname, virus) == -1)
-	{
-		printf("Error: Unable to open target file(s)\n");
 		return (-1);
-	}
 
 	// Check ELF64 headers
 	if (check_elf64_header((Elf64_Ehdr *)(host->map)) == -1 || check_elf64_header((Elf64_Ehdr *)(virus->map)) == -1)
-	{
-		printf("Error: Invalid ELF header(s)\n");
 		return (-1);
-	}
 
 	// Check ELF type
 	if (((Elf64_Ehdr *)(host->map))->e_type != ET_EXEC)
 	{
-		printf("Error: Host file is not an ET_EXEC\n");
+		printf("Error: Invalid ELF file type: Only executables supported\n");
 		return (-1);
 	}
 
 	// Find .text section
 	if (find_elf64_section(host, ".text") == -1 || find_elf64_section(virus, ".text") == -1)
-	{
-		printf("Error: Unable to find .text section(s)\n");
 		return (-1);
-	}
+
 	return (0);
 }
 
@@ -50,6 +45,7 @@ int		check_elf64_header(Elf64_Ehdr *ehdr)
 			ehdr->e_ident[EI_MAG3] != ELFMAG3 || \
 			ehdr->e_ident[EI_CLASS] != ELFCLASS64)
 	{
+		printf("Error: Invalid ELF header: Only ELF 64bit supported\n");
 		return (-1);
 	}
 	return (0);
@@ -70,16 +66,30 @@ int		find_elf64_section(t_file *file, const char *sect)
 	shdr = (Elf64_Shdr *)(file->map + ehdr->e_shoff);
 	stable = shdr[ehdr->e_shstrndx];
 	sname = (char *)(file->map + stable.sh_offset);
+
+	if ((Elf64_Off)file->size < ehdr->e_shoff + ehdr->e_shnum * ehdr->e_shentsize)
+	{
+		printf("Error: Section headers table extends beyond file limits\n");
+		return (-1);
+	}
+
 	for (shnum = 0 ; shnum < ehdr->e_shnum ; shnum++)
 	{
 		stable = shdr[shnum];
-		if (!ft_strcmp(sname + stable.sh_name, sect))
+		if ((Elf64_Off)file->size < shdr[shnum].sh_offset)
+		{
+			printf("Error: Section %d extends beyond file limits\n", shnum);
+			return (-1);
+		}
+		else if (!ft_strcmp(sname + stable.sh_name, sect))
 		{
 			file->sh_offset = stable.sh_offset;
 			file->sh_size = stable.sh_size;
 			return (0);
 		}
 	}
+	
+	printf("Error: Unable to find .text section\n");
 	return (-1);
 }
 
