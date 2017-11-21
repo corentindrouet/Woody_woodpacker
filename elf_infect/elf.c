@@ -1,4 +1,5 @@
 #include "woody_woodpacker.h"
+#include "libft/libft.h"
 
 /*
 ** Mmaps files, checks ELF headers for arch64, checks ET_EXEC, fetches .text sections
@@ -72,7 +73,7 @@ int		find_elf64_section(t_file *file, const char *sect)
 	for (shnum = 0 ; shnum < ehdr->e_shnum ; shnum++)
 	{
 		stable = shdr[shnum];
-		if (!strcmp(sname + stable.sh_name, sect))
+		if (!ft_strcmp(sname + stable.sh_name, sect))
 		{
 			file->sh_offset = stable.sh_offset;
 			file->sh_size = stable.sh_size;

@@ -1,4 +1,5 @@
 #include "woody_woodpacker.h"
+#include "libft/libft.h"
 
 void	*get_random_key(size_t size)
 {
@@ -11,11 +12,11 @@ void	*get_random_key(size_t size)
 		return (NULL);
 	if (!(buffer = malloc(size + 1)))
 		return (NULL);
-	bzero(buffer, size + 1);
+	ft_bzero(buffer, size + 1);
 	while (numberRandomBytesReaded < 256)
 	{
 		read(fd, (buffer + numberRandomBytesReaded), size - numberRandomBytesReaded);
-		numberRandomBytesReaded = strlen(buffer);
+		numberRandomBytesReaded = ft_strlen(buffer);
 	}
 	close(fd);
 	return (buffer);
