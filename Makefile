@@ -15,13 +15,18 @@ SRC			=	main \
 				file_unmap
 
 OBJ			=	$(addsuffix .o, $(SRC))
-LIB = ./libft/libftprintf.a
-LIBPATH = ./libft/
-LIBID = ftprintf
+LIB			=	./libft/libftprintf.a
+LIBPATH		=	./libft/
+LIBID		=	ftprintf
+PACKER		=	packer
+NASM		=	nasm
+NASMFLAGS	=	-f elf64
+ASMSRC		=	test_decryptage.s
 
 $(EXEC): $(LIB) $(OBJ)
 	$(info Compiling $(EXEC))
 	@$(CC) -I$(LIBPATH) $(CFLAGS) -o $@ $^ -L$(LIBPATH) -l$(LIBID)
+	$(NASM) $(NASMFLAGS) -o $(PACKER) $(ASMSRC)
 
 all: $(EXEC)
 
@@ -44,6 +49,7 @@ fclean: clean
 	$(info Cleaning . and ./libft ...)
 	@make $@ -C $(LIBPATH)
 	@rm -rf $(EXEC)
+	@rm -rf $(PACKER)
 	$(info Done !)
 
 re: fclean all
