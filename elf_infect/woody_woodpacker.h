@@ -26,6 +26,7 @@ void				*get_random_key(size_t size);
 void				swap(int *a, int *b);
 unsigned char		*encrypt_zone(char *zone, size_t size);
 int					patch_addr(void *m, size_t len, uint64_t pat, uint64_t val);
+off_t				size_file(int fd);
 void				munmap_file(t_file *file);
 int					mmap_file(const char *name, t_file *file);
 int					check_elf64(t_file *host, const char *hname, t_file *virus, const char *vname);
